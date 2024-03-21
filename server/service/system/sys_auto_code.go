@@ -506,6 +506,9 @@ func (autoCodeService *AutoCodeService) addAutoMoveFile(data *tplData) {
 		} else if strings.Contains(fileSlice[n-2], "table") {
 			data.autoMoveFilePath = filepath.Join(global.GVA_CONFIG.AutoCode.Root,
 				global.GVA_CONFIG.AutoCode.Web, global.GVA_CONFIG.AutoCode.WTable, data.autoPackage, filepath.Base(filepath.Dir(filepath.Dir(data.autoCodePath))), base)
+		} else if strings.Contains(fileSlice[n-2], "grid") {
+			data.autoMoveFilePath = filepath.Join(global.GVA_CONFIG.AutoCode.Root,
+				global.GVA_CONFIG.AutoCode.Web, global.GVA_CONFIG.AutoCode.WGrid, data.autoPackage, filepath.Base(filepath.Dir(filepath.Dir(data.autoCodePath))), strings.TrimSuffix(base, filepath.Ext(base))+"Grid.vue")
 		}
 	}
 }
@@ -553,7 +556,7 @@ func (autoCodeService *AutoCodeService) AutoCreateApi(a *system.AutoCodeStruct) 
 			Path:        "/" + a.Abbreviation + "/" + "get" + a.StructName + "List",
 			Description: "获取" + a.Description + "列表",
 			ApiGroup:    a.Description,
-			Method:      "GET",
+			Method:      "POST",
 		},
 	}
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
@@ -582,8 +585,12 @@ func (autoCodeService *AutoCodeService) AutoCreateMenu(a *system.AutoCodeStruct)
 	menu.Name = a.Abbreviation
 	menu.Path = a.Abbreviation
 	menu.Meta.Title = a.Description
-	menu.Component = fmt.Sprintf("view/%s/%s.vue", a.PackageName, a.PackageName)
+	menu.Component = fmt.Sprintf("view/%s/%s/%sGrid.vue", a.Package, a.PackageName, a.PackageName)
 	err = global.GVA_DB.Create(&menu).Error
+	if err != nil {
+		return 0, err
+	}
+	err = global.GVA_DB.Create(&system.SysAuthorityMenu{MenuId: strconv.Itoa(int(menu.ID)), AuthorityId: "888"}).Error
 	return menu.ID, err
 }
 
@@ -853,7 +860,7 @@ func installation(path string, formPath string, toPath string) error {
 func filterFile(paths []string) []string {
 	np := make([]string, 0, len(paths))
 	for _, path := range paths {
-		if ok, _ := skipMacSpecialDocument(path); ok {
+		if ok, _ := skipMacSpecialDocument(nil, path, ""); ok {
 			continue
 		}
 		np = append(np, path)
@@ -861,7 +868,7 @@ func filterFile(paths []string) []string {
 	return np
 }
 
-func skipMacSpecialDocument(src string) (bool, error) {
+func skipMacSpecialDocument(srcinfo os.FileInfo, src string, dest string) (bool, error) {
 	if strings.Contains(src, ".DS_Store") || strings.Contains(src, "__MACOSX") {
 		return true, nil
 	}

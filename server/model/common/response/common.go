@@ -10,5 +10,12 @@ type PageResult struct {
 type DxDataGridPageResult struct {
 	Data       interface{} `json:"data"`
 	TotalCount int64       `json:"totalCount"`
-	GroupCount int         `json:"groupCount"`
+	GroupCount int64       `json:"groupCount"`
+}
+
+type GroupList struct {
+	Key     string      `json:"key"`
+	Count   int         `json:"count"`
+	Items   interface{} `json:"items"`
+	Summary interface{} `json:"summary"`
 }

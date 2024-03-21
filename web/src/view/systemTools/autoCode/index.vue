@@ -1,9 +1,9 @@
 <template>
   <div>
-    <warning-bar
+    <!-- <warning-bar
       href="https://www.bilibili.com/video/BV1kv4y1g7nT?p=3"
       title="此功能为开发环境使用，不建议发布到生产，具体使用效果请看视频https://www.bilibili.com/video/BV1kv4y1g7nT?p=3"
-    />
+    /> -->
     <!-- 从数据库直接获取字段 -->
     <div class="gva-search-box">
       <el-collapse
@@ -232,69 +232,69 @@
           </el-select>
         </el-form-item>
         <div>
-        <el-form-item>
-          <template #label>
-            <el-tooltip
-              content="注：会自动在结构体global.Model其中包含主键和软删除相关操作配置"
-              placement="bottom"
-              effect="light"
-            >
-              <div> 使用GVA结构 <el-icon><QuestionFilled /></el-icon> </div>
-            </el-tooltip>
-          </template>
-          <el-checkbox
-            v-model="form.gvaModel"
-            @change="useGva"
-          />
-        </el-form-item>
-        <el-form-item>
-          <template #label>
-            <el-tooltip
-              content="注：会自动在结构体添加 created_by updated_by deleted_by，方便用户进行资源权限控制"
-              placement="bottom"
-              effect="light"
-            >
-              <div> 创建资源标识 <el-icon><QuestionFilled /></el-icon> </div>
-            </el-tooltip>
-          </template>
-          <el-checkbox v-model="form.autoCreateResource" />
-        </el-form-item>
-        <el-form-item>
-          <template #label>
-            <el-tooltip
-              content="注：把自动生成的API注册进数据库"
-              placement="bottom"
-              effect="light"
-            >
-              <div> 自动创建API <el-icon><QuestionFilled /></el-icon> </div>
-            </el-tooltip>
-          </template>
-          <el-checkbox v-model="form.autoCreateApiToSql" />
-        </el-form-item>
-        <el-form-item>
-          <template #label>
-            <el-tooltip
+          <el-form-item>
+            <template #label>
+              <el-tooltip
+                content="注：会自动在结构体global.Model其中包含主键和软删除相关操作配置"
+                placement="bottom"
+                effect="light"
+              >
+                <div> 使用GVA结构 <el-icon><QuestionFilled /></el-icon> </div>
+              </el-tooltip>
+            </template>
+            <el-checkbox
+              v-model="form.gvaModel"
+              @change="useGva"
+            />
+          </el-form-item>
+          <el-form-item>
+            <template #label>
+              <el-tooltip
+                content="注：会自动在结构体添加 created_by updated_by deleted_by，方便用户进行资源权限控制"
+                placement="bottom"
+                effect="light"
+              >
+                <div> 创建资源标识 <el-icon><QuestionFilled /></el-icon> </div>
+              </el-tooltip>
+            </template>
+            <el-checkbox v-model="form.autoCreateResource" />
+          </el-form-item>
+          <el-form-item>
+            <template #label>
+              <el-tooltip
+                content="注：把自动生成的API注册进数据库"
+                placement="bottom"
+                effect="light"
+              >
+                <div> 自动创建API <el-icon><QuestionFilled /></el-icon> </div>
+              </el-tooltip>
+            </template>
+            <el-checkbox v-model="form.autoCreateApiToSql" />
+          </el-form-item>
+          <el-form-item>
+            <template #label>
+              <el-tooltip
                 content="注：把自动生成的菜单注册进数据库"
                 placement="bottom"
                 effect="light"
-            >
-              <div> 自动创建菜单 <el-icon><QuestionFilled /></el-icon></div>
-            </el-tooltip>
-          </template>
-          <el-checkbox v-model="form.autoCreateMenuToSql" />
-        </el-form-item>
-        <el-form-item>
-          <template #label>
-            <el-tooltip
-              content="注：自动迁移生成的文件到yaml配置的对应位置"
-              placement="bottom"
-              effect="light"
-            >
-              <div> 自动移动文件 <el-icon><QuestionFilled /></el-icon></div>
-            </el-tooltip>
-          </template>
-          <el-checkbox v-model="form.autoMoveFile" />
-        </el-form-item>
+              >
+                <div> 自动创建菜单 <el-icon><QuestionFilled /></el-icon></div>
+              </el-tooltip>
+            </template>
+            <el-checkbox v-model="form.autoCreateMenuToSql" />
+          </el-form-item>
+          <el-form-item>
+            <template #label>
+              <el-tooltip
+                content="注：自动迁移生成的文件到yaml配置的对应位置"
+                placement="bottom"
+                effect="light"
+              >
+                <div> 自动移动文件 <el-icon><QuestionFilled /></el-icon></div>
+              </el-tooltip>
+            </template>
+            <el-checkbox v-model="form.autoMoveFile" />
+          </el-form-item>
         </div>
       </el-form>
     </div>
@@ -957,6 +957,7 @@ const getColumnFunc = async() => {
     form.value.autoCreateApiToSql = true
     form.value.autoMoveFile = true
     form.value.fields = []
+    console.log(fdMap.value)
     res.data.columns &&
           res.data.columns.forEach(item => {
             if (!form.value.gvaModel || (!gormModelList.some(gormfd => gormfd === item.columnName))) {
@@ -991,7 +992,6 @@ const setFdMap = async() => {
       fdMap.value[item.label] = fdtype
     })
   })
-  console.log(fdMap.value)
 }
 const getAutoCodeJson = async(id) => {
   const res = await getMeta({ id: Number(id) })

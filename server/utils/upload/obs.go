@@ -30,7 +30,7 @@ func (o *Obs) UploadFile(file *multipart.FileHeader) (string, string, error) {
 				Bucket: global.GVA_CONFIG.HuaWeiObs.Bucket,
 				Key:    filename,
 			},
-			ContentType: file.Header.Get("content-type"),
+			//ContentType: file.Header.Get("content-type"),
 		},
 		Body: open,
 	}

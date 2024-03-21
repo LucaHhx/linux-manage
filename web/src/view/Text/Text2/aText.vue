@@ -5,7 +5,7 @@
         id="gridContainer"
         ref="grid"
         :data-source="store"
-        key-expr="id"
+        key-expr="ID"
         :show-borders="true"
         show-column-lines="true"
         :remote-operations="true"
@@ -13,66 +13,65 @@
         allow-column-resizing="true"
         show-row-lines="true"
         row-alternation-enabled="true"
-        :selected-row-keys="selectedItemKeys"
         column-resizing-mode="widget"
-        @selection-changed="onSelectionChanged"
+        width="100%"
+        allow-column-reordering="true"
+        @editing-start="editingStart"
       >
+        <DxScrolling row-rendering-mode="virtual" /> <!-- 虚拟滚动 -->
+        <DxExport :enabled="true" :allow-export-selected-data="true" />
+        <DxGroupPanel :visible="true" /> <!-- 分组 -->
+        <DxGrouping :auto-expand-all="false" />
+        <DxRemoteOperations :group-paging="true" />
+        <DxColumnChooser :enabled="true" />
+        <DxColumnFixing :enabled="true" />
 
+        <DxFilterPanel :visible="true" />
+        <DxSorting mode="multiple" show-sort-indexes="false" />
+        <DxSelection select-all-mode="page" show-check-boxes-mode="onClick" mode="multiple" />
+        <DxFilterRow :visible="true" apply-filter-text="Filter" apply-filter="onClick" />
         <DxToolbar>
-          <DxItem
-            location="before"
-            name="addRowButton"
-          />
-          <DxItem
-            location="before"
-          >
+          <DxItem location="before" name="addRowButton" />
+          <DxItem location="before">
             <DxButton
-              :disabled="!selectedItemKeys.length"
               icon="trash"
               text="Delete Selected Records"
               @click="deleteRecords"
             />
           </DxItem>
-          <DxItem
-            location="center"
-            name="applyFilterButton"
-            show-text="always"
-          />
-          <DxItem
-            location="before"
-            name="columnChooserButton"
-          />
-          <DxItem
-            location="after"
-            name="columnChooserButton"
-          />
-          <DxItem
-            location="after"
-            name="exportButton"
-          />
-
+          <DxItem location="before" name="groupPanel" show-text="always" />
+          <DxItem location="center" name="applyFilterButton" show-text="always" />
+          <DxItem location="after">
+            <DxButton icon="refresh" @click="refreshDataGrid" />
+          </DxItem>
+          <DxItem location="after" name="columnChooserButton" />
+          <DxItem location="after" name="exportButton" />
+          <DxItem location="after">
+            <DxDropDownButton
+              :items="gridCacheOperate"
+              :drop-down-options="{ width: 150 }"
+              icon="detailslayout"
+            />
+          </DxItem>
         </DxToolbar>
-        <!-- 存储状态 -->
-        <DxStateStoring
-          :enabled="true"
-          type="sessionStorage"
-          storage-key="storage"
-        />
-        <!-- 内部滚动条 -->
-        <DxScrolling row-rendering-mode="virtual" />
 
-        <!-- 导出excel -->
-        <DxExport
-          :enabled="true"
-          :allow-export-selected-data="true"
-        />
-        <!-- 分组 -->
-        <DxGroupPanel :visible="true" />
-        <!-- 列选择 -->
-        <DxColumnChooser :enabled="true" />
-        <!-- 列固定 -->
-        <DxColumnFixing :enabled="true" />
-        <!-- 编辑模式弹框编辑 -->
+        <!-- <DxHeaderFilter :visible="true" /> -->
+        <DxColumn data-field="ID" data-type="number" width="100" />
+        <DxColumn data-field="bool" data-type="boolean" width="100" />
+        <DxColumn data-field="type" cell-template="cellTemplate" is-required width="100">
+          <DxLookup :data-source="typeOpts" display-expr="value" value-expr="key" />
+        </DxColumn>
+        <DxColumn data-field="int32" data-type="number" width="100" />
+        <DxColumn data-field="int64" data-type="number" width="100" />
+        <DxColumn data-field="varchar" data-type="string" width="100" />
+        <DxColumn data-field="text" data-type="string" width="100" />
+        <DxColumn data-field="tinyText" data-type="string" width="100" />
+        <DxColumn data-field="mediumText" data-type="string" width="100" />
+        <DxColumn data-field="longText" data-type="string" width="100" />
+        <DxColumn data-field="float" data-type="number" width="100" />
+        <DxColumn data-field="CreatedAt" data-type="datetime" width="150" />
+        <DxColumn data-field="UpdatedAt" data-type="datetime" width="150" />
+
         <DxEditing
           :allow-updating="true"
           :allow-adding="true"
@@ -83,51 +82,50 @@
             :show-title="true"
             :width="700"
             :height="525"
-            title="Employee Info"
+            title="Add aText"
           />
-          <DxForm>
-            <DxItem
-              :col-count="2"
-              :col-span="2"
-              item-type="group"
-            />
+          <DxForm :show-validation-summary="true">
+            <FDxItem data-field="ID" data-type="number" :editor-options="{disabled:true}" />
+            <FDxItem data-field="bool" data-type="boolean" />
+            <FDxItem data-field="type" data-type="number" />
+            <FDxItem data-field="int32" data-type="number" is-required />
+            <FDxItem data-field="int64" data-type="number" />
+            <FDxItem data-field="varchar" data-type="string" />
+            <FDxItem data-field="text" data-type="string" />
+            <FDxItem data-field="tinyText" data-type="string" />
+            <FDxItem data-field="mediumText" data-type="string" />
+            <FDxItem data-field="longText" data-type="string" />
+            <FDxItem data-field="float" data-type="number" />
+            <FDxItem data-field="CreatedAt" data-type="datetime" />
           </DxForm>
         </DxEditing>
-
-        <!-- 列筛选 -->
-        <DxFilterRow
-          :visible="true"
-          apply-filter="onClick"
-          apply-filter-text="Query"
-        />
-        <DxFilterPanel :visible="true" :customize-text="customizetext" />
-        <!-- 排序 -->
-        <DxSorting mode="multiple" />
-
-        <!-- 行选择 -->
-        <DxSelection
-          select-all-mode="page"
-          show-check-boxes-mode="onClick"
-          mode="multiple"
-        />
 
         <DxPaging :page-size="10" />
         <DxPager
           :visible="true"
           :allowed-page-sizes="pageSizes"
-          :display-mode="displayMode"
-          :show-page-size-selector="showPageSizeSelector"
-          :show-info="showInfo"
-          :show-navigation-buttons="showNavButtons"
+          display-mode="full"
+          :show-page-size-selector="true"
+          :show-info="true"
+          :show-navigation-buttons="true"
         />
+
+        <DxSummary>
+          <DxGroupItem
+            column="Id"
+            summary-type="count"
+          />
+        </DxSummary>
+
+        <template #cellTemplate="{ data }">
+          <el-tag :v-slot="data.displayValue" :type="tagStyle[data.value].type" :effect="tagStyle[data.value].effect" />
+        </template>
       </DxDataGrid>
     </div>
-    <button @click="onclick">aaaaaaa</button>
-    <button @click="onclick2">BBBBBBBBB</button>
   </div>
 </template>
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import {
   DxDataGrid,
   DxScrolling,
@@ -139,20 +137,28 @@ import {
   DxColumn,
   DxEditing,
   DxExport,
-  DxStateStoring,
   DxSelection,
   DxToolbar,
   DxItem,
   DxGroupPanel,
   DxColumnChooser,
-  DxFilterPanel
+  DxFilterPanel,
+  DxGrouping,
+  DxLookup,
+  DxRemoteOperations,
+  DxForm,
+  DxPopup,
+  DxSummary,
+  DxGroupItem
 } from 'devextreme-vue/data-grid'
+import {
+  DxItem as FDxItem,
+} from 'devextreme-vue/form'
 import DxButton from 'devextreme-vue/button'
-import DxSelectBox from 'devextreme-vue/select-box'
-import DxCheckBox from 'devextreme-vue/check-box'
-import { generateData } from './data.js'
+import DxDropDownButton from 'devextreme-vue/drop-down-button'
+import { confirm } from 'devextreme/ui/dialog'
 import CustomStore from 'devextreme/data/custom_store'
-import { GetColumnsFilter, GetGridSearch } from '@/utils/dataGrid'
+import { tagStyle, isNullOrUndefined, getGridCacheOperate, pageSizes } from '@/utils/dataGrid'
 import {
   createAText,
   deleteAText,
@@ -161,31 +167,38 @@ import {
   findAText,
   getATextList
 } from '@/api/aText'
-const displayModes = [
-  { text: 'Display Mode \'full\'', value: 'full' },
-  { text: 'Display Mode \'compact\'', value: 'compact' },
+
+// 选项
+const typeOpts = [
+  { key: 1, value: 'Type1' },
+  { key: 2, value: 'Type2' },
+  { key: 3, value: 'Type3' },
+  { key: 4, value: 'Type4' }
 ]
-const pageSizes = [5, 10, 'all']
 
-const displayMode = ref('full')
-const showPageSizeSelector = ref(true)
-const showInfo = ref(true)
-const showNavButtons = ref(true)
+// 缓存
+const gridCacheKey = 'aTextGrid'
 const grid = ref(null)
-const isCompactMode = computed(() => displayMode.value === 'compact')
 
-const columnsFilter = ref({})
+const gridCacheOperate = getGridCacheOperate(grid, gridCacheKey)
+gridCacheOperate[1].onClick()
 
-const isNotEmpty = (value) => value !== undefined && value !== null && value !== ''
+// 刷新
+const refreshDataGrid = () => {
+  grid.value.instance.refresh()
+}
 
+// 数据源
 const store = new CustomStore({
   key: 'ID',
   async load(loadOptions) {
     try {
-      console.log({ ...GetGridSearch(grid.value.instance), sorts: loadOptions.sort })
-
-      const result = await getATextList({ ...GetGridSearch(grid.value.instance), sorts: loadOptions.sort })
-      console.log(result)
+      const result = await getATextList({
+        page: grid?.value?.instance?.pageIndex(),
+        pageSize: grid?.value?.instance?.pageSize(),
+        conditions: loadOptions.filter,
+        sorts: loadOptions.sort,
+        groups: loadOptions.group })
 
       if (result.code !== 0) {
         throw new Error('Data Loading Error')
@@ -193,49 +206,72 @@ const store = new CustomStore({
       return {
         data: result.data.data,
         totalCount: result.data.totalCount,
-        // summary: result.summary,
-        // groupCount: result.groupCount,
+        groupCount: result.data.groupCount
       }
     } catch (err) {
       throw new Error('Data Loading Error')
     }
   },
-  async insert(aa) {
+  // 插入数据
+  async insert(value) {
+    console.log(value)
+
+    if (isNullOrUndefined(value.type)) {
+      throw new Error('Type is required')
+    }
+
+    if (isNullOrUndefined(value.int64)) {
+      throw new Error('int64 is required')
+    }
+
+    const result = await createAText(value)
+    if (result.code !== 0) {
+      throw new Error(result.msg)
+    }
+  },
+  // 按key删除
+  async remove(key) {
+    const result = await deleteAText({ ID: key })
+    if (result.code !== 0) {
+      throw new Error(result.msg)
+    }
+  },
+  // 更新数据
+  async update(key, value) {
+    const result = await updateAText({ id: key, fields: value })
+    if (result.code !== 0) {
+      throw new Error(result.msg)
+    }
+  },
+  async byKey(key, a) {
+    console.log('ByKEY', key, a)
   }
 })
 
-const onRefreshClick = () => {
-  window.location.reload()
+// 编辑开始
+const editingStart = async(e) => {
+  // e.cancel = true
+  const result = await findAText({ ID: e.key })
+  if (result.code !== 0) {
+    e.cancel = true
+    throw new Error(result.msg)
+  }
+  e.data = result.data
 }
 
-const getcols = () => {
-  console.log(GetColumnsFilter(grid))
+// 批量删除
+const deleteRecords = async() => {
+  const result = confirm('<i>确定删除所选数据?</i>', '批量删除确认')
+  result.then(async(dialogResult) => {
+    if (dialogResult) {
+      const ids = grid.value.instance.getSelectedRowKeys()
+      const result = await deleteATextByIds({ IDs: ids })
+      if (result.code === 0) {
+        grid.value.instance.refresh()
+      }
+    }
+  })
 }
 
-const selectedItemKeys = ref([])
-const onSelectionChanged = (e) => {
-  selectedItemKeys.value = e.selectedRowKeys
-}
-
-const deleteRecords = () => {
-  console.log(selectedItemKeys.value)
-}
-
-const query = () => {
-  grid.value.instance.refresh()
-}
-const customizetext = (e) => {
-  // console.log(e.component.getVisibleColumns())
-
-  // console.log(GetColumnsFilter(e.component.getVisibleColumns()))
-}
-const onclick = () => {
-  const state = grid.value.instance.state()
-  console.log(state)
-}
-const onclick2 = () => {
-  grid.value.instance.state(null)
-}
 </script>
-<style scoped>
-</style>
+<style scoped></style>

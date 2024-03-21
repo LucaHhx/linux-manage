@@ -41,6 +41,7 @@ func (autoCodeHistoryService *AutoCodeHistoryService) CreateAutoCodeHistory(meta
 		TableName:     tableName,
 		ApiIDs:        apiIds,
 		BusinessDB:    BusinessDB,
+		MenuID:        menuID,
 	}).Error
 }
 
@@ -130,6 +131,7 @@ func (autoCodeHistoryService *AutoCodeHistoryService) RollBack(info *systemReq.R
 			_ = utils.AutoClearCode(meta[0], meta[2])
 		}
 	}
+	//err = global.GVA_DB.Delete(system.SysBaseMenu{}, "name = ?", a.Abbreviation).Error
 
 	ast.RollBackAst(md.Package, md.StructName)
 

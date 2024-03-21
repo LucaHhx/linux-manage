@@ -10,6 +10,7 @@ type ATextSearch struct {
 	EndCreatedAt   *time.Time `json:"endCreatedAt" form:"endCreatedAt"`
 
 	request.PageInfo
-	Conditions []request.Condition `json:"conditions" form:"conditions"`
-	Sorts      []request.Sort      `json:"sorts" form:"sorts"`
+	Conditions interface{}     `json:"conditions" form:"conditions"`
+	Sorts      []request.Sort  `json:"sorts" form:"sorts"`
+	Groups     []request.Group `json:"groups" form:"groups"`
 }

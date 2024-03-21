@@ -7,7 +7,7 @@
 </template>
 
 <script>
-import deMessages from 'devextreme/localization/messages/zh.json'
+import deMessages from '@/assets/zh.json'
 import { locale, loadMessages } from 'devextreme/localization'
 
 export default {

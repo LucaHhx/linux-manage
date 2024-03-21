@@ -11,10 +11,9 @@ import (
 
 func Redis() {
 	redisCfg := global.GVA_CONFIG.Redis
-	client := redis.NewClient(&redis.Options{
-		Addr:     redisCfg.Addr,
+	client := redis.NewClusterClient(&redis.ClusterOptions{
+		Addrs:    []string{redisCfg.Addr},
 		Password: redisCfg.Password, // no password set
-		DB:       redisCfg.DB,       // use default DB
 	})
 	pong, err := client.Ping(context.Background()).Result()
 	if err != nil {

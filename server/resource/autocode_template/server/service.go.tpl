@@ -1,12 +1,11 @@
 package {{.Package}}
 
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/global"
+    "github.com/flipped-aurora/gin-vue-admin/server/global"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/{{.Package}}"
-    {{.Package}}Req "github.com/flipped-aurora/gin-vue-admin/server/model/{{.Package}}/request"
-    {{- if .AutoCreateResource }}
-    "gorm.io/gorm"
-    {{- end}}
+	"github.com/flipped-aurora/gin-vue-admin/server/utils/filter"
 )
 
 type {{.StructName}}Service struct {
@@ -66,8 +65,9 @@ func ({{.Abbreviation}}Service *{{.StructName}}Service)Delete{{.StructName}}ById
 
 // Update{{.StructName}} 更新{{.Description}}记录
 // Author [piexlmax](https://github.com/piexlmax)
-func ({{.Abbreviation}}Service *{{.StructName}}Service)Update{{.StructName}}({{.Abbreviation}} {{.Package}}.{{.StructName}}) (err error) {
-	err = {{$db}}.Save(&{{.Abbreviation}}).Error
+func ({{.Abbreviation}}Service *{{.StructName}}Service)Update{{.StructName}}(up request.UpdateById) (err error) {
+    db := global.GVA_DB.Model({{.Package}}.{{.StructName}}{})
+	err = up.DbUpdate(db).Error
 	return err
 }
 
@@ -80,60 +80,33 @@ func ({{.Abbreviation}}Service *{{.StructName}}Service)Get{{.StructName}}({{.Pri
 
 // Get{{.StructName}}InfoList 分页获取{{.Description}}记录
 // Author [piexlmax](https://github.com/piexlmax)
-func ({{.Abbreviation}}Service *{{.StructName}}Service)Get{{.StructName}}InfoList(info {{.Package}}Req.{{.StructName}}Search) (list []{{.Package}}.{{.StructName}}, total int64, err error) {
+func ({{.Abbreviation}}Service *{{.StructName}}Service)Get{{.StructName}}InfoList(info request.ListSearch) (list interface{}, total, groupCount int64, err error) {
 	limit := info.PageSize
-	offset := info.PageSize * (info.Page - 1)
-    // 创建db
-	db := {{$db}}.Model(&{{.Package}}.{{.StructName}}{})
-    var {{.Abbreviation}}s []{{.Package}}.{{.StructName}}
-    // 如果有条件搜索 下方会自动创建搜索语句
-{{- if .GvaModel }}
-    if info.StartCreatedAt !=nil && info.EndCreatedAt !=nil {
-     db = db.Where("created_at BETWEEN ? AND ?", info.StartCreatedAt, info.EndCreatedAt)
-    }
-{{- end }}
-        {{- range .Fields}}
-            {{- if .FieldSearchType}}
-                {{- if or (eq .FieldType "string") (eq .FieldType "enum") (eq .FieldType "picture") (eq .FieldType "video") (eq .FieldType "richtext") }}
-    if info.{{.FieldName}} != "" {
-        db = db.Where("{{.ColumnName}} {{.FieldSearchType}} ?",{{if eq .FieldSearchType "LIKE"}}"%"+ {{ end }}info.{{.FieldName}}{{if eq .FieldSearchType "LIKE"}}+"%"{{ end }})
-    }
-    {{- else if eq .FieldSearchType "BETWEEN" "NOT BETWEEN"}}
-        if info.Start{{.FieldName}} != nil && info.End{{.FieldName}} != nil {
-            db = db.Where("{{.ColumnName}} {{.FieldSearchType}} ? AND ? ",info.Start{{.FieldName}},info.End{{.FieldName}})
-        }
-    {{- else}}
-    if info.{{.FieldName}} != nil {
-        db = db.Where("{{.ColumnName}} {{.FieldSearchType}} ?",{{if eq .FieldSearchType "LIKE"}}"%"+{{ end }}info.{{.FieldName}}{{if eq .FieldSearchType "LIKE"}}+"%"{{ end }})
-    }
-            {{- end }}
-        {{- end }}
-    {{- end }}
-	err = db.Count(&total).Error
-	if err!=nil {
-    	return
-    }
-    {{- if .NeedSort}}
-        var OrderStr string
-        orderMap := make(map[string]bool)
-       {{- range .Fields}}
-            {{- if .Sort}}
-         	orderMap["{{.ColumnName}}"] = true
-         	{{- end}}
-       {{- end}}
-       if orderMap[info.Sort] {
-          OrderStr = info.Sort
-          if info.Order == "descending" {
-             OrderStr = OrderStr + " desc"
-          }
-          db = db.Order(OrderStr)
-       }
-    {{- end}}
+	offset := info.PageSize * (info.Page)
 
+// 创建db
+	db := global.GVA_DB.Model(&{{.Package}}.{{.StructName}}{})
+	var {{.Abbreviation}}s []{{.Package}}.{{.StructName}}
+	filter.NewParsing(info.Conditions, db).Apply()
+	err = db.Count(&total).Error
+//分组
+	if len(info.Groups) > 0 {
+		var groupLists []response.GroupList
+		info.Groups[0].DbGroup(db)
+		err = db.Find(&groupLists).Error
+		groupCount = int64(len(groupLists))
+		for i, groupList := range groupLists {
+			groupLists[i].Summary = []int{groupList.Count}
+		}
+		return groupLists, total, groupCount, err
+	}
 	if limit != 0 {
-       db = db.Limit(limit).Offset(offset)
-    }
-	
+		db = db.Limit(limit).Offset(offset)
+	}
+	for _, sort := range info.Sorts {
+		sort.DbSort(db)
+	}
 	err = db.Find(&{{.Abbreviation}}s).Error
-	return  {{.Abbreviation}}s, total, err
+
+	return {{.Abbreviation}}s, total, groupCount, err
 }

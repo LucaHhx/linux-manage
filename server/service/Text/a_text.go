@@ -3,7 +3,9 @@ package Text
 import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/Text"
-	TextReq "github.com/flipped-aurora/gin-vue-admin/server/model/Text/request"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
+	"github.com/flipped-aurora/gin-vue-admin/server/utils/filter"
 )
 
 type ATextService struct {
@@ -32,8 +34,9 @@ func (aTextService *ATextService) DeleteATextByIds(IDs []string) (err error) {
 
 // UpdateAText 更新aText表记录
 // Author [piexlmax](https://github.com/piexlmax)
-func (aTextService *ATextService) UpdateAText(aText Text.AText) (err error) {
-	err = global.GVA_DB.Save(&aText).Error
+func (aTextService *ATextService) UpdateAText(up request.UpdateById) (err error) {
+	db := global.GVA_DB.Model(Text.AText{})
+	err = up.DbUpdate(db).Error
 	return err
 }
 
@@ -46,17 +49,29 @@ func (aTextService *ATextService) GetAText(ID string) (aText Text.AText, err err
 
 // GetATextInfoList 分页获取aText表记录
 // Author [piexlmax](https://github.com/piexlmax)
-func (aTextService *ATextService) GetATextInfoList(info TextReq.ATextSearch) (list []Text.AText, total int64, err error) {
+func (aTextService *ATextService) GetATextInfoList(info request.ListSearch) (list interface{}, total, groupCount int64, err error) {
+	//jcMap := helper.GormModelJsonToColumn(Text.AText{})
 	limit := info.PageSize
 	offset := info.PageSize * (info.Page)
+
 	// 创建db
 	db := global.GVA_DB.Model(&Text.AText{})
-
-	for _, condition := range info.Conditions {
-		condition.DbCondition(db)
-	}
 	var aTexts []Text.AText
+	filter.NewParsing(info.Conditions, db).Apply()
 	err = db.Count(&total).Error
+
+	//分组
+	if len(info.Groups) > 0 {
+		var groupLists []response.GroupList
+		info.Groups[0].DbGroup(db)
+		err = db.Find(&groupLists).Error
+		groupCount = int64(len(groupLists))
+		for i, groupList := range groupLists {
+			groupLists[i].Summary = []int{groupList.Count}
+		}
+		return groupLists, total, groupCount, err
+	}
+
 	if limit != 0 {
 		db = db.Limit(limit).Offset(offset)
 	}
@@ -64,5 +79,6 @@ func (aTextService *ATextService) GetATextInfoList(info TextReq.ATextSearch) (li
 		sort.DbSort(db)
 	}
 	err = db.Find(&aTexts).Error
-	return aTexts, total, err
+
+	return aTexts, total, groupCount, err
 }

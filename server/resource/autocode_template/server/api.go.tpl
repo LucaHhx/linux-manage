@@ -2,15 +2,12 @@ package {{.Package}}
 
 import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
-    "github.com/flipped-aurora/gin-vue-admin/server/model/{{.Package}}"
-    {{.Package}}Req "github.com/flipped-aurora/gin-vue-admin/server/model/{{.Package}}/request"
-    "github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
-    "github.com/flipped-aurora/gin-vue-admin/server/service"
-    "github.com/gin-gonic/gin"
-    "go.uber.org/zap"
-    {{- if .AutoCreateResource}}
-    "github.com/flipped-aurora/gin-vue-admin/server/utils"
-    {{- end }}
+	"github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/{{.Package}}"
+	"github.com/flipped-aurora/gin-vue-admin/server/service"
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type {{.StructName}}Api struct {
@@ -100,8 +97,8 @@ func ({{.Abbreviation}}Api *{{.StructName}}Api) Delete{{.StructName}}ByIds(c *gi
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"更新成功"}"
 // @Router /{{.Abbreviation}}/update{{.StructName}} [put]
 func ({{.Abbreviation}}Api *{{.StructName}}Api) Update{{.StructName}}(c *gin.Context) {
-	var {{.Abbreviation}} {{.Package}}.{{.StructName}}
-	err := c.ShouldBindJSON(&{{.Abbreviation}})
+	var upID request.UpdateById
+	err := c.ShouldBindJSON(&upID)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
@@ -110,7 +107,7 @@ func ({{.Abbreviation}}Api *{{.StructName}}Api) Update{{.StructName}}(c *gin.Con
     {{.Abbreviation}}.UpdatedBy = utils.GetUserID(c)
         {{- end }}
 
-	if err := {{.Abbreviation}}Service.Update{{.StructName}}({{.Abbreviation}}); err != nil {
+	if err := {{.Abbreviation}}Service.Update{{.StructName}}(upID); err != nil {
         global.GVA_LOG.Error("更新失败!", zap.Error(err))
 		response.FailWithMessage("更新失败", c)
 	} else {
@@ -147,21 +144,20 @@ func ({{.Abbreviation}}Api *{{.StructName}}Api) Find{{.StructName}}(c *gin.Conte
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"获取成功"}"
 // @Router /{{.Abbreviation}}/get{{.StructName}}List [get]
 func ({{.Abbreviation}}Api *{{.StructName}}Api) Get{{.StructName}}List(c *gin.Context) {
-	var pageInfo {{.Package}}Req.{{.StructName}}Search
-	err := c.ShouldBindQuery(&pageInfo)
+	var pageInfo request.ListSearch
+	err := c.ShouldBindJSON(&pageInfo)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	if list, total, err := {{.Abbreviation}}Service.Get{{.StructName}}InfoList(pageInfo); err != nil {
+	if list, total,groupCount, err := {{.Abbreviation}}Service.Get{{.StructName}}InfoList(pageInfo); err != nil {
 	    global.GVA_LOG.Error("获取失败!", zap.Error(err))
         response.FailWithMessage("获取失败", c)
     } else {
-        response.OkWithDetailed(response.PageResult{
-            List:     list,
-            Total:    total,
-            Page:     pageInfo.Page,
-            PageSize: pageInfo.PageSize,
+        response.OkWithDetailed(response.DxDataGridPageResult{
+			Data:       list,
+			TotalCount: total,
+			GroupCount: groupCount,
         }, "获取成功", c)
     }
 }

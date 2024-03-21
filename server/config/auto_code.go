@@ -14,5 +14,6 @@ type Autocode struct {
 	SRequest        string `mapstructure:"server-request" json:"server-request"  yaml:"server-request"`
 	WApi            string `mapstructure:"web-api" json:"web-api" yaml:"web-api"`
 	WForm           string `mapstructure:"web-form" json:"web-form" yaml:"web-form"`
+	WGrid           string `mapstructure:"web-grid" json:"web-grid" yaml:"web-grid"`
 	TransferRestart bool   `mapstructure:"transfer-restart" json:"transfer-restart" yaml:"transfer-restart"`
 }

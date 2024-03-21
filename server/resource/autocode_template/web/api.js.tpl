@@ -88,10 +88,10 @@ export const find{{.StructName}} = (params) => {
 // @Param data query request.PageInfo true "分页获取{{.Description}}列表"
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"获取成功"}"
 // @Router /{{.Abbreviation}}/get{{.StructName}}List [get]
-export const get{{.StructName}}List = (params) => {
+export const get{{.StructName}}List = (data) => {
   return service({
     url: '/{{.Abbreviation}}/get{{.StructName}}List',
-    method: 'get',
-    params
+    method: 'post',
+    data
   })
 }

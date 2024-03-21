@@ -3,7 +3,7 @@ package Text
 import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/Text"
-	TextReq "github.com/flipped-aurora/gin-vue-admin/server/model/Text/request"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/service"
 	"github.com/gin-gonic/gin"
@@ -87,14 +87,14 @@ func (aTextApi *ATextApi) DeleteATextByIds(c *gin.Context) {
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"更新成功"}"
 // @Router /aText/updateAText [put]
 func (aTextApi *ATextApi) UpdateAText(c *gin.Context) {
-	var aText Text.AText
-	err := c.ShouldBindJSON(&aText)
+	var upID request.UpdateById
+	err := c.ShouldBindJSON(&upID)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 
-	if err := aTextService.UpdateAText(aText); err != nil {
+	if err := aTextService.UpdateAText(upID); err != nil {
 		global.GVA_LOG.Error("更新失败!", zap.Error(err))
 		response.FailWithMessage("更新失败", c)
 	} else {
@@ -131,19 +131,20 @@ func (aTextApi *ATextApi) FindAText(c *gin.Context) {
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"获取成功"}"
 // @Router /aText/getATextList [get]
 func (aTextApi *ATextApi) GetATextList(c *gin.Context) {
-	var pageInfo TextReq.ATextSearch
+	var pageInfo request.ListSearch
 	err := c.ShouldBindJSON(&pageInfo)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	if list, total, err := aTextService.GetATextInfoList(pageInfo); err != nil {
+	if list, total, groupCount, err := aTextService.GetATextInfoList(pageInfo); err != nil {
 		global.GVA_LOG.Error("获取失败!", zap.Error(err))
 		response.FailWithMessage("获取失败", c)
 	} else {
 		response.OkWithDetailed(response.DxDataGridPageResult{
 			Data:       list,
 			TotalCount: total,
+			GroupCount: groupCount,
 		}, "获取成功", c)
 	}
 }

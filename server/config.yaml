@@ -19,6 +19,7 @@ autocode:
     server-request: /model/%s/request/
     web-api: /api
     web-form: /view
+    web-grid: /view
     transfer-restart: true
 aws-s3:
     bucket: xxxxx-10005608
@@ -171,8 +172,8 @@ qiniu:
     use-https: false
     use-cdn-domains: false
 redis:
-    addr: 127.0.0.1:6379
-    password: ""
+    addr: 47.99.106.90:6379
+    password: "Luca218691.!"
     db: 0
 sqlite:
     prefix: ""
@@ -196,7 +197,7 @@ system:
     iplimit-count: 15000
     iplimit-time: 3600
     use-multipoint: false
-    use-redis: false
+    use-redis: true
     use-mongo: false
 tencent-cos:
     bucket: xxxxx-10005608

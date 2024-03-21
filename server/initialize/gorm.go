@@ -8,6 +8,8 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/model/system"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/model/Text"
+
+	"github.com/flipped-aurora/gin-vue-admin/server/model/resources"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -52,7 +54,7 @@ func RegisterTables() {
 		example.ExaFile{},
 		example.ExaCustomer{},
 		example.ExaFileChunk{},
-		example.ExaFileUploadAndDownload{}, Text.AText{},
+		example.ExaFileUploadAndDownload{}, Text.AText{}, resources.AFileInfo{},
 	)
 	if err != nil {
 		global.GVA_LOG.Error("register table failed", zap.Error(err))

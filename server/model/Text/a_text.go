@@ -22,6 +22,7 @@ type AText struct {
 	MediumBlob []byte  `json:"mediumBlob" form:"mediumBlob" gorm:"column:medium_blob;type:mediumblob;size:;comment:;"` //mediumBlob字段
 	LongBlob   []byte  `json:"longBlob" form:"longBlob" gorm:"column:long_blob;type:longblob;size:;comment:;"`         //longBlob字段
 	Float      float64 `json:"float" form:"float" gorm:"column:float;comment:;"`                                       //float字段
+
 }
 
 // TableName aText表 AText自定义表名 a_text

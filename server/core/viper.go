@@ -4,7 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"github.com/flipped-aurora/gin-vue-admin/server/core/internal"
+	"github.com/flipped-aurora/gin-vue-admin/server/initialize"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"os"
 	"path/filepath"
 
@@ -71,4 +73,14 @@ func Viper(path ...string) *viper.Viper {
 	// root 适配性 根据root位置去找到对应迁移位置,保证root路径有效
 	global.GVA_CONFIG.AutoCode.Root, _ = filepath.Abs("..")
 	return v
+}
+
+func Init() {
+	global.GVA_VP = Viper() // 初始化Viper
+	initialize.OtherInit()
+	global.GVA_LOG = Zap() // 初始化zap日志库
+	zap.ReplaceGlobals(global.GVA_LOG)
+	global.GVA_DB = initialize.Gorm() // gorm连接数据库
+	initialize.Timer()
+	initialize.DBList()
 }

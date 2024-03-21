@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -98,6 +99,28 @@ func MakeFile(fileName string, FileMd5 string) (string, error) {
 		}
 	}
 	return finishDir + fileName, nil
+}
+
+func MakeFileToPath(fileName, FileMd5, filePath string) (string, error) {
+	rd, err := os.ReadDir(breakpointDir + FileMd5)
+	if err != nil {
+		return filepath.Join(filePath, fileName), err
+	}
+	_ = os.MkdirAll(filePath, os.ModePerm)
+	fd, err := os.OpenFile(filepath.Join(filePath, fileName), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o644)
+	if err != nil {
+		return filepath.Join(filePath, fileName), err
+	}
+	defer fd.Close()
+	for k := range rd {
+		content, _ := os.ReadFile(breakpointDir + FileMd5 + "/" + fileName + "_" + strconv.Itoa(k))
+		_, err = fd.Write(content)
+		if err != nil {
+			_ = os.Remove(filepath.Join(filePath, fileName))
+			return filepath.Join(filePath, fileName), err
+		}
+	}
+	return filepath.Join(filePath, fileName), nil
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)

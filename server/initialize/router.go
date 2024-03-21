@@ -88,6 +88,106 @@ func Routers() *gin.Engine {
 	{
 		TextRouter := router.RouterGroupApp.Text
 		TextRouter.InitATextRouter(PrivateGroup)
+
+	}
+	{
+		controlRouter := router.RouterGroupApp.Control
+		controlRouter.InitGridRouter(PrivateGroup)
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+
+	}
+	{
+		resourcesRouter := router.RouterGroupApp.Resources
+		resourcesRouter.InitAFileInfoRouter(PrivateGroup)
+		resourcesRouter.InitAFileManageRouter(PrivateGroup)
 	}
 
 	global.GVA_LOG.Info("router register success")
