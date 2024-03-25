@@ -8,6 +8,7 @@ import (
 	"io"
 	"mime/multipart"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -499,10 +500,10 @@ func (autoCodeService *AutoCodeService) addAutoMoveFile(data *tplData) {
 				global.GVA_CONFIG.AutoCode.Web, global.GVA_CONFIG.AutoCode.WApi, base)
 		} else if strings.Contains(fileSlice[n-2], "form") {
 			data.autoMoveFilePath = filepath.Join(global.GVA_CONFIG.AutoCode.Root,
-				global.GVA_CONFIG.AutoCode.Web, global.GVA_CONFIG.AutoCode.WForm, filepath.Base(filepath.Dir(filepath.Dir(data.autoCodePath))), strings.TrimSuffix(base, filepath.Ext(base))+"Form.vue")
+				global.GVA_CONFIG.AutoCode.Web, global.GVA_CONFIG.AutoCode.WForm, data.autoPackage, filepath.Base(filepath.Dir(filepath.Dir(data.autoCodePath))), strings.TrimSuffix(base, filepath.Ext(base))+"Form.vue")
 		} else if strings.Contains(fileSlice[n-2], "table") {
 			data.autoMoveFilePath = filepath.Join(global.GVA_CONFIG.AutoCode.Root,
-				global.GVA_CONFIG.AutoCode.Web, global.GVA_CONFIG.AutoCode.WTable, filepath.Base(filepath.Dir(filepath.Dir(data.autoCodePath))), base)
+				global.GVA_CONFIG.AutoCode.Web, global.GVA_CONFIG.AutoCode.WTable, data.autoPackage, filepath.Base(filepath.Dir(filepath.Dir(data.autoCodePath))), base)
 		}
 	}
 }
@@ -786,10 +787,10 @@ func (autoCodeService *AutoCodeService) InstallPlugin(file *multipart.FileHeader
 			continue
 		}
 		if pathArr[2]+"/"+pathArr[3] == `server/plugin` && len(serverPlugin) == 0 {
-			serverPlugin = filepath.Join(pathArr[0], pathArr[1], pathArr[2], pathArr[3])
+			serverPlugin = path.Join(pathArr[0], pathArr[1], pathArr[2], pathArr[3])
 		}
 		if pathArr[2]+"/"+pathArr[3] == `web/plugin` && len(webPlugin) == 0 {
-			webPlugin = filepath.Join(pathArr[0], pathArr[1], pathArr[2], pathArr[3])
+			webPlugin = path.Join(pathArr[0], pathArr[1], pathArr[2], pathArr[3])
 		}
 	}
 	if len(serverPlugin) == 0 && len(webPlugin) == 0 {

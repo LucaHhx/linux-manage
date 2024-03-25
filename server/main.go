@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "go.uber.org/automaxprocs"
 	"go.uber.org/zap"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/core"
@@ -29,7 +28,7 @@ func main() {
 	global.GVA_DB = initialize.Gorm() // gorm连接数据库
 	initialize.Timer()
 	initialize.DBList()
-	if global.GVA_DB != nil {
+	if global.GVA_DB != nil && global.GVA_CONFIG.Mysql.Migrate {
 		initialize.RegisterTables() // 初始化表
 		// 程序结束前关闭数据库链接
 		db, _ := global.GVA_DB.DB()

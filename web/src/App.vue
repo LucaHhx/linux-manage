@@ -6,6 +6,19 @@
   </div>
 </template>
 
+<script>
+import deMessages from 'devextreme/localization/messages/zh.json'
+import { locale, loadMessages } from 'devextreme/localization'
+
+export default {
+  created() {
+    loadMessages(deMessages)
+    locale(navigator.language)
+  }
+}
+
+</script>
+
 <script setup>
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 // element 2.3.8之前使用下面的语句
@@ -17,6 +30,7 @@ defineOptions({
 
 </script>
 <style lang="scss">
+@import "../dx-styles.scss";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

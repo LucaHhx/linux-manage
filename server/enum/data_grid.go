@@ -1,0 +1,4 @@
+package enum
+
+// int
+const ()

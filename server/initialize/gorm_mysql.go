@@ -7,6 +7,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"log"
+	"os"
+	"time"
 )
 
 // GormMysql 初始化Mysql数据库
@@ -29,6 +33,16 @@ func GormMysql() *gorm.DB {
 		sqlDB, _ := db.DB()
 		sqlDB.SetMaxIdleConns(m.MaxIdleConns)
 		sqlDB.SetMaxOpenConns(m.MaxOpenConns)
+
+		newLogger := logger.New(
+			log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer（日志输出到标准输出）
+			logger.Config{
+				SlowThreshold: time.Second, // 慢查询阈值
+				LogLevel:      logger.Info, // 日志级别
+				Colorful:      true,        // 彩色打印
+			},
+		)
+		db.Logger = newLogger
 		return db
 	}
 }

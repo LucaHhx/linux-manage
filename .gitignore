@@ -1,4 +1,4 @@
-.idea/
+
 /web/node_modules
 /web/dist
 
@@ -14,8 +14,6 @@ yarn-debug.log*
 yarn-error.log*
 
 # Editor directories and files
-.idea
-.vscode
 *.suo
 *.ntvs*
 *.njsproj
@@ -25,7 +23,6 @@ yarn-error.log*
 /server/log/
 /server/gva
 /server/latest_log
-/server/__debug_bin*
 
 *.iml
 web/.pnpm-debug.log

@@ -418,7 +418,7 @@
               style="width:100%"
               placeholder="请选择字段查询条件"
               clearable
-              :disabled="row.fieldType!=='json'"
+              :disabled="row.fieldType=='json'"
             >
               <el-option
                 v-for="item in typeSearchOptions"
@@ -606,6 +606,10 @@ const typeOptions = ref([
   {
     label: 'JSON',
     value: 'json',
+  },
+  {
+    label: '二进制',
+    value: 'blob',
   }
 ])
 
@@ -856,6 +860,7 @@ const enterForm = async(isPreview) => {
       }
       form.value.humpPackageName = toSQLLine(form.value.packageName)
       if (isPreview) {
+        console.log(form.value)
         const data = await preview(form.value)
         preViewCode.value = data.data.autoCode
         previewFlag.value = true
@@ -955,20 +960,23 @@ const getColumnFunc = async() => {
                 errorText: '',
                 clearable: true,
                 fieldSearchType: '',
-                dictType: ''
+                dictType: '',
+                sort: true
               })
             }
           })
   }
+  console.log(form.value.fields)
 }
 const setFdMap = async() => {
-  const fdTypes = ['string', 'int', 'bool', 'float64', 'time.Time']
+  const fdTypes = ['string', 'int', 'bool', 'float64', 'time.Time', 'enum', 'blob', 'richtext']
   fdTypes.forEach(async fdtype => {
     const res = await getDict(fdtype)
     res && res.forEach(item => {
       fdMap.value[item.label] = fdtype
     })
   })
+  console.log(fdMap.value)
 }
 const getAutoCodeJson = async(id) => {
   const res = await getMeta({ id: Number(id) })

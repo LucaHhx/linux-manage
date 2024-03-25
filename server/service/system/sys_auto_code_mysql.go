@@ -48,12 +48,14 @@ func (s *autoCodeMysql) GetColumn(businessDB string, tableName string, dbName st
     c.COLUMN_NAME column_name,
     c.DATA_TYPE data_type,
     CASE c.DATA_TYPE
-        WHEN 'longtext' THEN c.CHARACTER_MAXIMUM_LENGTH
+--         WHEN 'longtext' THEN c.CHARACTER_MAXIMUM_LENGTH
         WHEN 'varchar' THEN c.CHARACTER_MAXIMUM_LENGTH
         WHEN 'double' THEN CONCAT_WS(',', c.NUMERIC_PRECISION, c.NUMERIC_SCALE)
         WHEN 'decimal' THEN CONCAT_WS(',', c.NUMERIC_PRECISION, c.NUMERIC_SCALE)
-        WHEN 'int' THEN c.NUMERIC_PRECISION
-        WHEN 'bigint' THEN c.NUMERIC_PRECISION
+        WHEN 'int' THEN 32
+        WHEN 'bigint' THEN 64
+		WHEN 'tinyint' THEN 1
+        WHEN 'smallint' THEN 8
         ELSE '' 
     END AS data_type_long,
     c.COLUMN_COMMENT column_comment,
@@ -69,7 +71,8 @@ ON
     AND kcu.CONSTRAINT_NAME = 'PRIMARY'
 WHERE 
     c.TABLE_NAME = ? 
-    AND c.TABLE_SCHEMA = ?;`
+    AND c.TABLE_SCHEMA = ?
+ORDER BY c.ORDINAL_POSITION ASC;`
 	if businessDB == "" {
 		err = global.GVA_DB.Raw(sql, tableName, dbName).Scan(&entities).Error
 	} else {

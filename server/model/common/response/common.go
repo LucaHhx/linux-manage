@@ -6,3 +6,9 @@ type PageResult struct {
 	Page     int         `json:"page"`
 	PageSize int         `json:"pageSize"`
 }
+
+type DxDataGridPageResult struct {
+	Data       interface{} `json:"data"`
+	TotalCount int64       `json:"totalCount"`
+	GroupCount int         `json:"groupCount"`
+}

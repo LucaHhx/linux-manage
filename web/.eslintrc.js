@@ -12,7 +12,14 @@ module.exports = {
   extends: ['plugin:vue/recommended', 'eslint:recommended'],
   rules: {
     'vue/no-v-model-argument': 0,
-    'vue/max-attributes-per-line': 2,
+    'vue/max-attributes-per-line': ['error', {
+      'singleline': {
+        'max': 8
+      },
+      'multiline': {
+        'max': 1
+      }
+    }],
     'vue/singleline-html-element-content-newline': 'off',
     'vue/multiline-html-element-content-newline': 'off',
     'vue/multi-word-component-names': 'off',

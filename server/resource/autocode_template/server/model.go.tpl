@@ -12,7 +12,13 @@ type {{.StructName}} struct {
 {{ if .GvaModel }} global.GVA_MODEL {{ end }}
       {{- range .Fields}}
             {{- if eq .FieldType "enum" }}
-      {{.FieldName}}  string `json:"{{.FieldJson}}" form:"{{.FieldJson}}" gorm:"{{- if .PrimaryKey -}}primarykey;{{- end -}}column:{{.ColumnName}};type:enum({{.DataTypeLong}});comment:{{.Comment}};" {{- if .Require }} binding:"required"{{- end -}}`
+      {{.FieldName}}  uint8 `json:"{{.FieldJson}}" form:"{{.FieldJson}}" gorm:"{{- if .PrimaryKey -}}primarykey;{{- end -}}column:{{.ColumnName}};type:smallint;size:{{.DataTypeLong}};comment:{{.Comment}};" {{- if .Require }} binding:"required"{{- end -}}`
+            {{- else if eq .FieldType "bool" }}
+      {{.FieldName}}  bool `json:"{{.FieldJson}}" form:"{{.FieldJson}}" gorm:"{{- if .PrimaryKey -}}primarykey;{{- end -}}column:{{.ColumnName}};type:tinyint;comment:{{.Comment}};" {{- if .Require }} binding:"required"{{- end -}}`
+            {{- else if eq .FieldType "int" }}
+      {{.FieldName}}  int{{- if .DataTypeLong -}}{{.DataTypeLong}}{{- end -}}  `json:"{{.FieldJson}}" form:"{{.FieldJson}}" form:"{{.FieldJson}}" gorm:"{{- if .PrimaryKey -}}primarykey;{{- end -}}column:{{.ColumnName}};comment:{{.Comment}};size:{{.DataTypeLong}};"`
+            {{- else if eq .FieldType "blob" }}
+      {{.FieldName}}  []byte `json:"{{.FieldJson}}" form:"{{.FieldJson}}" gorm:"{{- if .PrimaryKey -}}primarykey;{{- end -}}column:{{.ColumnName}};type:{{.DataType}};size:{{.DataTypeLong}};comment:{{.Comment}};" {{- if .Require }} binding:"required"{{- end -}}`
             {{- else if eq .FieldType "picture" }}
       {{.FieldName}}  string `json:"{{.FieldJson}}" form:"{{.FieldJson}}" gorm:"{{- if .PrimaryKey -}}primarykey;{{- end -}}column:{{.ColumnName}};comment:{{.Comment}};{{- if .DataTypeLong -}}size:{{.DataTypeLong}};{{- end -}}" {{- if .Require }} binding:"required"{{- end -}}`
             {{- else if eq .FieldType "video" }}
@@ -22,11 +28,11 @@ type {{.StructName}} struct {
             {{- else if eq .FieldType "pictures" }}
       {{.FieldName}}  datatypes.JSON `json:"{{.FieldJson}}" form:"{{.FieldJson}}" gorm:"{{- if .PrimaryKey -}}primarykey;{{- end -}}column:{{.ColumnName}};comment:{{.Comment}};{{- if .DataTypeLong -}}size:{{.DataTypeLong}};{{- end -}}" {{- if .Require }} binding:"required"{{- end -}}`
             {{- else if eq .FieldType "richtext" }}
-      {{.FieldName}}  string `json:"{{.FieldJson}}" form:"{{.FieldJson}}" gorm:"{{- if .PrimaryKey -}}primarykey;{{- end -}}column:{{.ColumnName}};comment:{{.Comment}};{{- if .DataTypeLong -}}size:{{.DataTypeLong}};{{- end -}}type:text;" {{- if .Require }} binding:"required"{{- end -}}`
+      {{.FieldName}}  string `json:"{{.FieldJson}}" form:"{{.FieldJson}}" gorm:"{{- if .PrimaryKey -}}primarykey;{{- end -}}column:{{.ColumnName}};comment:{{.Comment}};type:{{.DataType}};" {{- if .Require }} binding:"required"{{- end -}}`
             {{- else if eq .FieldType "json" }}
       {{.FieldName}}  datatypes.JSON `json:"{{.FieldJson}}" form:"{{.FieldJson}}" gorm:"{{- if .PrimaryKey -}}primarykey;{{- end -}}column:{{.ColumnName}};comment:{{.Comment}};{{- if .DataTypeLong -}}size:{{.DataTypeLong}};{{- end -}}type:text;" {{- if .Require }} binding:"required"{{- end -}}`
             {{- else if ne .FieldType "string" }}
-      {{.FieldName}}  *{{.FieldType}} `json:"{{.FieldJson}}" form:"{{.FieldJson}}" gorm:"{{- if .PrimaryKey -}}primarykey;{{- end -}}column:{{.ColumnName}};comment:{{.Comment}};{{- if .DataTypeLong -}}size:{{.DataTypeLong}};{{- end -}}" {{- if .Require }} binding:"required"{{- end -}}`
+      {{.FieldName}}  {{.FieldType}} `json:"{{.FieldJson}}" form:"{{.FieldJson}}" gorm:"{{- if .PrimaryKey -}}primarykey;{{- end -}}column:{{.ColumnName}};comment:{{.Comment}};{{- if .DataTypeLong -}}size:{{.DataTypeLong}};{{- end -}}" {{- if .Require }} binding:"required"{{- end -}}`
             {{- else }}
       {{.FieldName}}  {{.FieldType}} `json:"{{.FieldJson}}" form:"{{.FieldJson}}" gorm:"{{- if .PrimaryKey -}}primarykey;{{- end -}}column:{{.ColumnName}};comment:{{.Comment}};{{- if .DataTypeLong -}}size:{{.DataTypeLong}};{{- end -}}" {{- if .Require }} binding:"required"{{- end -}}`
             {{- end }}  {{ if .FieldDesc }}//{{.FieldDesc}} {{ end }} {{- end }}
