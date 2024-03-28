@@ -254,7 +254,7 @@ func makeDictTypes(autoCode *system.AutoCodeStruct) {
 // @param: model.AutoCodeStruct
 // @return: err error
 
-func (autoCodeService *AutoCodeService) CreateTemp(autoCode system.AutoCodeStruct, ids ...uint) (err error) {
+func (autoCodeService *AutoCodeService) CreateTemp(autoCode system.AutoCodeStruct, menuID uint, ids ...uint) (err error) {
 	makeDictTypes(&autoCode)
 	for i := range autoCode.Fields {
 		if autoCode.Fields[i].FieldType == "time.Time" {
@@ -390,7 +390,7 @@ func (autoCodeService *AutoCodeService) CreateTemp(autoCode system.AutoCodeStruc
 			return err
 		}
 	}
-	if autoCode.AutoMoveFile || autoCode.AutoCreateApiToSql {
+	if autoCode.AutoMoveFile || autoCode.AutoCreateApiToSql || autoCode.AutoCreateMenuToSql {
 		if autoCode.TableName != "" {
 			err = AutoCodeHistoryServiceApp.CreateAutoCodeHistory(
 				string(meta),
@@ -402,6 +402,7 @@ func (autoCodeService *AutoCodeService) CreateTemp(autoCode system.AutoCodeStruc
 				idBf.String(),
 				autoCode.Package,
 				autoCode.BusinessDB,
+				menuID,
 			)
 		} else {
 			err = AutoCodeHistoryServiceApp.CreateAutoCodeHistory(
@@ -414,6 +415,7 @@ func (autoCodeService *AutoCodeService) CreateTemp(autoCode system.AutoCodeStruc
 				idBf.String(),
 				autoCode.Package,
 				autoCode.BusinessDB,
+				menuID,
 			)
 		}
 	}
@@ -568,6 +570,21 @@ func (autoCodeService *AutoCodeService) AutoCreateApi(a *system.AutoCodeStruct) 
 		return nil
 	})
 	return ids, err
+}
+
+func (autoCodeService *AutoCodeService) AutoCreateMenu(a *system.AutoCodeStruct) (id uint, err error) {
+	var menu system.SysBaseMenu
+	err = global.GVA_DB.First(&menu, "name = ?", a.Abbreviation).Error
+	if err == nil {
+		return 0, errors.New("存在相同的菜单路由，请关闭自动创建菜单功能")
+	}
+	menu.ParentId = "0"
+	menu.Name = a.Abbreviation
+	menu.Path = a.Abbreviation
+	menu.Meta.Title = a.Description
+	menu.Component = fmt.Sprintf("view/%s/%s.vue", a.PackageName, a.PackageName)
+	err = global.GVA_DB.Create(&menu).Error
+	return menu.ID, err
 }
 
 func (autoCodeService *AutoCodeService) getNeedList(autoCode *system.AutoCodeStruct) (dataList []tplData, fileList []string, needMkdir []string, err error) {
