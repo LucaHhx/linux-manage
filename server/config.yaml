@@ -175,6 +175,9 @@ redis:
     addr: 47.99.106.90:6379
     password: "Luca218691.!"
     db: 0
+    useCluster: true
+    clusterAddrs:
+        - 47.99.106.90:6379
 sqlite:
     prefix: ""
     port: ""

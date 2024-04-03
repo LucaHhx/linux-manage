@@ -83,4 +83,8 @@ func Init() {
 	global.GVA_DB = initialize.Gorm() // gorm连接数据库
 	initialize.Timer()
 	initialize.DBList()
+	if global.GVA_CONFIG.System.UseMultipoint || global.GVA_CONFIG.System.UseRedis {
+		// 初始化redis服务
+		initialize.Redis()
+	}
 }
