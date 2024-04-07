@@ -18,6 +18,7 @@
         allow-column-reordering="true"
         @editing-start="editingStart"
       >
+        <DxLoadPanel :enabled="false" />
         <DxScrolling row-rendering-mode="virtual" /> <!-- 虚拟滚动 -->
         <DxExport :enabled="true" :allow-export-selected-data="true" />
         <DxGroupPanel :visible="true" /> <!-- 分组 -->
@@ -55,38 +56,14 @@
           </DxItem>
         </DxToolbar>
         <DxColumn data-field="ID" data-type="number" width="100" />
-        {{- range .Fields}}
-          {{- if eq .FieldType "bool" }}
-        <DxColumn data-field="{{.FieldJson}}"  data-type="boolean" caption="{{.FieldDesc}}"/>
-          {{- end }}
-          {{- if eq .FieldType "string" "richtext" }}
-        <DxColumn data-field="{{.FieldJson}}"  data-type="string" caption="{{.FieldDesc}}"/>
-          {{- end }}
-          {{- if eq .FieldType "json" }}
-        <DxColumn data-field="{{.FieldJson}}"  data-type="object" caption="{{.FieldDesc}}"/>
-          {{- end }}
-          {{- if eq .FieldType "int" "float64"  }}
-        <DxColumn data-field="{{.FieldJson}}"  data-type="number" caption="{{.FieldDesc}}"/>
-          {{- end }}
-          {{- if eq .FieldType "time.Time" }}
-        <DxColumn data-field="{{.FieldJson}}"  data-type="datetime" caption="{{.FieldDesc}}"/>
-          {{- end }}
-          {{- if eq .FieldType "float64" }}
-        <DxColumn data-field="{{.FieldJson}}"  data-type="number" caption="{{.FieldDesc}}"/>
-          {{- end }}
-          {{- if eq .FieldType "enum" }}
-        <DxColumn data-field="{{.FieldJson}}"  data-type="number" caption="{{.FieldDesc}}">
-          <DxLookup :data-source="{{.FieldJson}}Opts" display-expr="value" value-expr="key" />
+        <DxColumn data-field="state" data-type="number" caption="状态">
+          <DxLookup :data-source="stateOpts" display-expr="value" value-expr="key" />
         </DxColumn>
-          {{- end }}
-          {{- else }}
-        <DxColumn data-field="{{.FieldJson}}"  data-type="string" caption="{{.FieldDesc}}"/>
-          {{- end }}
-
-
-        <DxColumn data-field="CreatedAt" data-type="datetime" width="150" caption="创建时间"/>
-        <DxColumn data-field="UpdatedAt" data-type="datetime" width="150" caption="最近修改"/>
-
+        <DxColumn data-field="name" data-type="string" caption="名称" />
+        <DxColumn data-field="progress" data-type="number" caption="进度" cell-template="progress-bar" />
+        <DxColumn data-field="magnet" data-type="string" caption="链接" />
+        <DxColumn data-field="CreatedAt" data-type="datetime" width="150" caption="创建时间" />
+        <DxColumn data-field="UpdatedAt" data-type="datetime" width="150" caption="最近修改" />
 
         <DxEditing
           :allow-updating="true"
@@ -98,32 +75,20 @@
             :show-title="true"
             :width="700"
             :height="525"
-            title="Add {{.StructName}}"
+            title="Add ATorrent"
           />
           <DxForm :show-validation-summary="true">
             <FDxItem data-field="ID" data-type="number" :editor-options="{disabled:true}" />
-{{- range .Fields}}
-          {{- if eq .FieldType "bool" }}
-            <FDxItem data-field="{{.FieldJson}}" data-type="boolean" />
-          {{- end }}
-          {{- if eq .FieldType "string" "richtext" }}
-            <FDxItem data-field="{{.FieldJson}}"  data-type="string" />
-          {{- end }}
-          {{- if eq .FieldType "json" }}
-        <FDxItem data-field="{{.FieldJson}}"  data-type="object" />
-          {{- end }}
-          {{- if eq .FieldType "int" "float64" "enum" }}
-        <FDxItem data-field="{{.FieldJson}}"  data-type="number" />
-          {{- end }}
-          {{- if eq .FieldType "time.Time" }}
-        <FDxItem data-field="{{.FieldJson}}"  data-type="datetime" />
-          {{- end }}
-          {{- if eq .FieldType "float64" }}
-        <FDxItem data-field="{{.FieldJson}}"  data-type="number" />
-          {{- end }}
-          {{- else }}
-        <FDxItem data-field="{{.FieldJson}}"  data-type="string" />
-{{- end }}
+            <FDxItem data-field="state" data-type="number" :editor-options="{disabled:true}" />
+            <FDxItem data-field="name" data-type="string" />
+            <FDxItem data-field="progress" data-type="number" />
+            <FDxItem
+              data-field="magnet"
+              data-type="string"
+              editor-type="dxTextArea"
+              :col-span="2"
+              :editor-options="{autoResizeEnabled:'true'}"
+            />
 
           </DxForm>
         </DxEditing>
@@ -146,14 +111,27 @@
         </DxSummary>
 
         <template #cellTemplate="{ data }">
-          <el-tag :type="tagStyle[data.value].type" :effect="tagStyle[data.value].effect">  {{"{{"}} data.displayValue {{"}}"}}</el-tag>
+          <el-tag :type="tagStyle[data.value].type" :effect="tagStyle[data.value].effect">  {{ data.displayValue }} </el-tag>
+        </template>
+        <template #progress-bar="{ data }">
+          <div>
+            <DxProgressBar
+              id="progress-bar-status"
+              :min="0"
+              :max="100"
+              :value="progressMap[data.data.ID]"
+              width="90%"
+            />
+            <button @click=" console.log(data);">{{ data.value }}</button>
+          </div>
+
         </template>
       </DxDataGrid>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onUnmounted, ref } from 'vue'
 import {
   DxDataGrid,
   DxScrolling,
@@ -177,39 +155,51 @@ import {
   DxForm,
   DxPopup,
   DxSummary,
-  DxGroupItem
+  DxGroupItem,
+  DxLoadPanel
 } from 'devextreme-vue/data-grid'
 import {
   DxItem as FDxItem,
 } from 'devextreme-vue/form'
 import DxButton from 'devextreme-vue/button'
+import { DxProgressBar } from 'devextreme-vue/progress-bar'
 import DxDropDownButton from 'devextreme-vue/drop-down-button'
 import { confirm } from 'devextreme/ui/dialog'
 import CustomStore from 'devextreme/data/custom_store'
 import { tagStyle, isNullOrUndefined, getGridCacheOperate, pageSizes } from '@/utils/dataGrid'
 import {
-  create{{.StructName}},
-  delete{{.StructName}},
-  delete{{.StructName}}ByIds,
-  update{{.StructName}},
-  find{{.StructName}},
-  get{{.StructName}}List
-} from '@/api/{{.PackageName}}'
+  createATorrent,
+  deleteATorrent,
+  deleteATorrentByIds,
+  updateATorrent,
+  findATorrent,
+  getATorrentList
+} from '@/api/aTorrent'
 
 // 选项
-{{- range .Fields}}
-  {{- if eq .FieldType "enum" }}
-const {{.FieldJson}}Opts = [
+const stateOpts = [
   { key: 1, value: 'Type1' },
   { key: 2, value: 'Type2' },
   { key: 3, value: 'Type3' },
   { key: 4, value: 'Type4' }
 ]
-  {{- end }}
-{{- end }}
+const progressMap = ref({
+  1: 30
+})
+const timer = ref(null)
+timer.value = setInterval(() => {
+  // grid?.value?.instance?.refresh()
+  progressMap.value[1]++
+  console.log()
+}, 1000 * 3)
+
+onUnmounted(() => {
+  clearInterval(timer.value)
+  timer.value = null
+})
 
 // 缓存
-const gridCacheKey = '{{.StructName}}Grid'
+const gridCacheKey = 'ATorrentGrid'
 const grid = ref(null)
 
 const gridCacheOperate = getGridCacheOperate(grid, gridCacheKey)
@@ -225,7 +215,7 @@ const store = new CustomStore({
   key: 'ID',
   async load(loadOptions) {
     try {
-      const result = await get{{.StructName}}List({
+      const result = await getATorrentList({
         page: grid?.value?.instance?.pageIndex(),
         pageSize: grid?.value?.instance?.pageSize(),
         conditions: loadOptions.filter,
@@ -246,29 +236,28 @@ const store = new CustomStore({
   },
   // 插入数据
   async insert(value) {
- {{- range .Fields }}
-   {{- if eq .Require true }}
-    if (isNullOrUndefined(value. {{.FieldJson }})) {
-      throw new Error(' {{.FieldJson }} is required')
+    if (isNullOrUndefined(value.name)) {
+      throw new Error(' name is required')
     }
-    {{- end }}
-{{- end }}
+    if (isNullOrUndefined(value.magnet)) {
+      throw new Error(' magnet is required')
+    }
 
-    const result = await create{{.StructName}}(value)
+    const result = await createATorrent(value)
     if (result.code !== 0) {
       throw new Error(result.msg)
     }
   },
   // 按key删除
   async remove(key) {
-    const result = await delete{{.StructName}}({ ID: key })
+    const result = await deleteATorrent({ ID: key })
     if (result.code !== 0) {
       throw new Error(result.msg)
     }
   },
   // 更新数据
   async update(key, value) {
-    const result = await update{{.StructName}}({ id: key, fields: value })
+    const result = await updateATorrent({ id: key, fields: value })
     if (result.code !== 0) {
       throw new Error(result.msg)
     }
@@ -281,7 +270,7 @@ const store = new CustomStore({
 // 编辑开始
 const editingStart = async(e) => {
   // e.cancel = true
-  const result = await find{{.StructName}}({ ID: e.key })
+  const result = await findATorrent({ ID: e.key })
   if (result.code !== 0) {
     e.cancel = true
     throw new Error(result.msg)
@@ -295,7 +284,7 @@ const deleteRecords = async() => {
   result.then(async(dialogResult) => {
     if (dialogResult) {
       const ids = grid.value.instance.getSelectedRowKeys()
-      const result = await delete{{.StructName}}ByIds({ IDs: ids })
+      const result = await deleteATorrentByIds({ IDs: ids })
       if (result.code === 0) {
         grid.value.instance.refresh()
       }

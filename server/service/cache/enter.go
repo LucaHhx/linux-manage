@@ -6,4 +6,4 @@ type CacheGroup struct {
 	control.ControlGroup
 }
 
-var ServiceCacheGroup = new(CacheGroup)
+var CacheExamples = new(CacheGroup)

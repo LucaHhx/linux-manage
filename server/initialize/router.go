@@ -93,6 +93,7 @@ func Routers() *gin.Engine {
 	{
 		controlRouter := router.RouterGroupApp.Control
 		controlRouter.InitGridRouter(PrivateGroup)
+		controlRouter.InitFileManageRouter(PrivateGroup)
 	}
 	{
 
@@ -187,7 +188,8 @@ func Routers() *gin.Engine {
 	{
 		resourcesRouter := router.RouterGroupApp.Resources
 		resourcesRouter.InitAFileInfoRouter(PrivateGroup)
-		resourcesRouter.InitAFileManageRouter(PrivateGroup)
+		resourcesRouter.InitATorrentRouter(PrivateGroup)
+
 	}
 
 	global.GVA_LOG.Info("router register success")

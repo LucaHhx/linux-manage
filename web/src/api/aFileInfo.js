@@ -64,6 +64,14 @@ export const updateAFileInfo = (data) => {
   })
 }
 
+export const saveAFileInfo = (data) => {
+  return service({
+    url: '/aFileInfo/saveAFileInfo',
+    method: 'put',
+    data
+  })
+}
+
 // @Tags AFileInfo
 // @Summary 用id查询aFileInfo表
 // @Security ApiKeyAuth
@@ -93,5 +101,13 @@ export const getAFileInfoList = (data) => {
     url: '/aFileInfo/getAFileInfoList',
     method: 'post',
     data
+  })
+}
+
+export const getTagAFileInfoList = (params) => {
+  return service({
+    url: '/aFileInfo/getTagAFileInfoList',
+    method: 'get',
+    params
   })
 }

@@ -1,16 +1,17 @@
-package resources
+package control
 
 import (
 	"fmt"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/control"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/example"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/resources"
 	"github.com/flipped-aurora/gin-vue-admin/server/service"
+	"github.com/flipped-aurora/gin-vue-admin/server/service/cache"
 	"github.com/flipped-aurora/gin-vue-admin/server/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 	"io"
 	"mime/multipart"
 	"os"
@@ -18,27 +19,65 @@ import (
 	"strconv"
 )
 
-type AFileManageApi struct {
+var FileCache = cache.CacheExamples.FileManage
+var FileService = service.ServiceGroupApp.ControlServiceGroup.FileManage
+
+type FileManageApi struct {
 }
 
-var aFileManageService = service.ServiceGroupApp.ResourcesServiceGroup.AFileManageService
-
-// GetFileItems 获取目录下文件
-func (afm *AFileManageApi) GetFileItems(c *gin.Context) {
-	parentDirectory := c.Query("parentDirectory")
-	if parentDirectory == "" {
-		response.FailWithMessage("未找到指定目录", c)
-	}
-	items, err := aFileManageService.GetFileItems(parentDirectory)
+// Option 设置参数
+func (fm *FileManageApi) Option(c *gin.Context) {
+	optionReq := struct {
+		Key    string                   `json:"key" form:"key"`
+		Type   string                   `json:"type" form:"type"`
+		Option control.FileManageOption `json:"option" form:"option"`
+	}{}
+	err := c.ShouldBindJSON(&optionReq)
 	if err != nil {
-		response.FailWithMessage(fmt.Sprintf("获取 %s 文件列表失败", parentDirectory), c)
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	var option *control.FileManageOption
+	switch optionReq.Type {
+	case control.SaveOption:
+		// save
+		err = FileCache.SetControlFileManage(optionReq.Key, optionReq.Option)
+	case control.LoadOption:
+		// load
+		option, err = FileCache.GetControlFileManage(optionReq.Key)
+	case control.RmOption:
+		// rm
+		err = FileCache.DelControlFileManage(optionReq.Key)
+	default:
+		response.FailWithMessage("type error", c)
+	}
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+	} else {
+		response.OkWithDetailed(option, "操作成功", c)
+	}
+}
+
+func (fm *FileManageApi) GetFileItems(c *gin.Context) {
+	info := struct {
+		Path    string                    `json:"path" form:"path"`
+		Options control.FileManageOptions `json:"options" form:"options"`
+	}{}
+	err := c.ShouldBindJSON(&info)
+	if err != nil {
+		response.FailWithMessage("参数错误", c)
+	}
+	var items []*resources.AFileInfo
+	items, err = FileService.GetFileItems(info.Path, info.Options)
+	if err != nil {
+		response.FailWithMessage(fmt.Sprintf("获取 %s 文件列表失败", info.Path), c)
 		return
 	}
 	response.OkWithData(items, c)
 }
 
 // UploadFileChunk 分片上传文件
-func (afm *AFileManageApi) UploadFileChunk(c *gin.Context) {
+func (fm *FileManageApi) UploadFileChunk(c *gin.Context) {
 	var (
 		err        error
 		f          multipart.File
@@ -56,7 +95,7 @@ func (afm *AFileManageApi) UploadFileChunk(c *gin.Context) {
 	defer func(err2 error) {
 		if err2 != nil {
 			global.GVA_LOG.Error(err2.Error())
-			aFileManageService.DeleteFileChunk(file.FileMd5, file.FilePath)
+			_ = FileService.DeleteFileChunk(file.FileMd5, file.FilePath)
 		}
 	}(err)
 
@@ -85,7 +124,7 @@ func (afm *AFileManageApi) UploadFileChunk(c *gin.Context) {
 		response.FailWithMessage("检查md5失败", c)
 		return
 	}
-	file, err = aFileManageService.FindOrCreateFile(fileMd5, fileName, chunkTotal)
+	file, err = FileService.FindOrCreateFile(fileMd5, fileName, chunkTotal)
 	if err != nil {
 		err = fmt.Errorf("查找或创建记录失败,%v", zap.Error(err))
 		response.FailWithMessage("查找或创建记录失败", c)
@@ -97,7 +136,7 @@ func (afm *AFileManageApi) UploadFileChunk(c *gin.Context) {
 		response.FailWithMessage("断点续传失败", c)
 		return
 	}
-	if err = aFileManageService.CreateFileChunk(file.ID, pathC, chunkNumber); err != nil {
+	if err = FileService.CreateFileChunk(file.ID, pathC, chunkNumber); err != nil {
 		err = fmt.Errorf("创建文件记录失败!,%v", zap.Error(err))
 		response.FailWithMessage("创建文件记录失败", c)
 		return
@@ -112,14 +151,14 @@ func (afm *AFileManageApi) UploadFileChunk(c *gin.Context) {
 		} else {
 			response.OkWithMessage("上传文件成功", c)
 		}
-		aFileManageService.DeleteFileChunk(file.FileMd5, file.FilePath)
+		_ = FileService.DeleteFileChunk(file.FileMd5, file.FilePath)
 		return
 	}
 	response.OkWithMessage("切片创建成功", c)
 }
 
 // AbortFileUpload 终止文件上传
-func (afm *AFileManageApi) AbortFileUpload(c *gin.Context) {
+func (fm *FileManageApi) AbortFileUpload(c *gin.Context) {
 	fileMd5 := c.Query("fileMd5")
 	err := utils.RemoveChunk(fileMd5)
 	if err != nil {
@@ -130,7 +169,7 @@ func (afm *AFileManageApi) AbortFileUpload(c *gin.Context) {
 }
 
 // DeleteItem 删除文件
-func (afm *AFileManageApi) DeleteItem(c *gin.Context) {
+func (fm *FileManageApi) DeleteItem(c *gin.Context) {
 	path := c.Query("path")
 	err := os.RemoveAll(path)
 	if err != nil {
@@ -141,7 +180,7 @@ func (afm *AFileManageApi) DeleteItem(c *gin.Context) {
 }
 
 // RenameItem 重命名文件
-func (afm *AFileManageApi) RenameItem(c *gin.Context) {
+func (fm *FileManageApi) RenameItem(c *gin.Context) {
 	reReq := struct {
 		File struct {
 			Name string `json:"name" form:"name"`
@@ -163,28 +202,8 @@ func (afm *AFileManageApi) RenameItem(c *gin.Context) {
 	response.OkWithMessage("重命名成功", c)
 }
 
-// CreateDirectory 创建文件夹
-func (afm *AFileManageApi) CreateDirectory(c *gin.Context) {
-	dirReq := struct {
-		Path string `json:"path" form:"path"`
-		Name string `json:"name" form:"name"`
-	}{}
-	err := c.ShouldBindJSON(&dirReq)
-	if err != nil {
-		response.FailWithMessage(err.Error(), c)
-		return
-	}
-	dirPath := filepath.Join(dirReq.Path, dirReq.Name)
-	err = os.Mkdir(dirPath, os.ModePerm)
-	if err != nil {
-		response.FailWithMessage("创建文件夹失败", c)
-		return
-	}
-	response.OkWithMessage("创建文件夹成功", c)
-}
-
 // CopyItem 复制文件
-func (afm *AFileManageApi) CopyItem(c *gin.Context) {
+func (fm *FileManageApi) CopyItem(c *gin.Context) {
 	reReq := struct {
 		File    string `json:"file" form:"file"`
 		NewName string `json:"newName" form:"newName"`
@@ -203,72 +222,46 @@ func (afm *AFileManageApi) CopyItem(c *gin.Context) {
 	response.OkWithMessage("复制成功", c)
 }
 
-// AddTag 添加标签
-func (afm *AFileManageApi) AddTag(c *gin.Context) {
-	var file resources.AFileInfo
-	err := c.ShouldBindJSON(&file)
+// CreateDirectory 创建文件夹
+func (fm *FileManageApi) CreateDirectory(c *gin.Context) {
+	dirReq := struct {
+		Path string `json:"path" form:"path"`
+		Name string `json:"name" form:"name"`
+	}{}
+	err := c.ShouldBindJSON(&dirReq)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-
-	if file.Tag == "Root" {
-		err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-			err = tx.Where("tag = ?", "Root").Delete(&resources.AFileInfo{}).Error
-			if err != nil {
-				return err
-			}
-			err = tx.Save(&file).Error
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-	} else {
-		err = global.GVA_DB.Save(&file).Error
-	}
+	dirPath := filepath.Join(dirReq.Path, dirReq.Name)
+	err = os.Mkdir(dirPath, os.ModePerm)
 	if err != nil {
-		response.FailWithMessage("创建失败", c)
+		response.FailWithMessage("创建文件夹失败", c)
 		return
 	}
-	response.OkWithMessage("创建成功", c)
+	response.OkWithMessage("创建文件夹成功", c)
 }
 
-func (afm *AFileManageApi) GetMainList(c *gin.Context) {
-	list := make([]resources.AFileInfo, 0)
-	err := global.GVA_DB.Find(&list, "tag = ?", "Main").Error
+func (fm *FileManageApi) DownloadItem(c *gin.Context) {
+	var fileInfo resources.AFileInfo
+	err := c.BindJSON(&fileInfo)
 	if err != nil {
-		response.FailWithMessage("获取失败", c)
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	response.OkWithData(list, c)
-}
-
-func (afm *AFileManageApi) GetRoot(c *gin.Context) {
-	fi := resources.AFileInfo{}
-	err := global.GVA_DB.First(&fi, "tag = ?", "Root").Error
+	var file *os.File
+	file, err = os.Open(fileInfo.Key)
 	if err != nil {
-		response.FailWithMessage("获取失败", c)
+		response.FailWithMessage("文件打开失败", c)
 		return
 	}
-	if fi.Key == "" {
-		fi.Key = "/"
+	defer file.Close()
+	c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filepath.Base(fileInfo.Name)))
+	c.Writer.Header().Add("Content-Type", "application/octet-stream")
+	_, err = io.Copy(c.Writer, file)
+	if err != nil {
+		response.FailWithMessage("文件下载失败", c)
+		return
 	}
-	response.OkWithData(fi, c)
+	//response.OkWithMessage("文件下载成功", c)
 }
-
-//func (afm *AFileManageApi) UpAttribute(c *gin.Context) {
-//	attribute := struct {
-//		Key string      `json:"key" form:"key"`
-//		Val interface{} `json:"val" form:"val"`
-//	}{}
-//	err := c.ShouldBindJSON(&attribute)
-//	if err != nil {
-//		response.FailWithMessage(fmt.Sprintf("%s 属性修改失败", attribute.Key), c)
-//	}
-//	err = control.SetAttribute(attribute.Key, attribute.Val)
-//	if err != nil {
-//		response.FailWithMessage(fmt.Sprintf("%s 属性修改失败", attribute.Key), c)
-//	}
-//	response.OkWithData(fmt.Sprintf("%s 属性修改成功", attribute.Key), c)
-//}

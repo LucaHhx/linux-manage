@@ -1,5 +1,6 @@
 package control
 
 type ControlGroup struct {
-	ControlGrid
+	Grid
+	FileManage
 }

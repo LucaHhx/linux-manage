@@ -102,6 +102,21 @@ func (aFileInfoApi *AFileInfoApi) UpdateAFileInfo(c *gin.Context) {
 	}
 }
 
+func (aFileInfoApi *AFileInfoApi) SaveAFileInfo(c *gin.Context) {
+	var afi resources.AFileInfo
+	err := c.ShouldBindJSON(&afi)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if err := global.GVA_DB.Save(&afi).Error; err != nil {
+		global.GVA_LOG.Error("更新失败!", zap.Error(err))
+		response.FailWithMessage("更新失败", c)
+	} else {
+		response.OkWithMessage("更新成功", c)
+	}
+}
+
 // FindAFileInfo 用id查询aFileInfo表
 // @Tags AFileInfo
 // @Summary 用id查询aFileInfo表
@@ -146,5 +161,17 @@ func (aFileInfoApi *AFileInfoApi) GetAFileInfoList(c *gin.Context) {
 			TotalCount: total,
 			GroupCount: groupCount,
 		}, "获取成功", c)
+	}
+}
+
+func (aFileInfoApi *AFileInfoApi) GetTagAFileInfoList(c *gin.Context) {
+	tag := c.Query("tag")
+	list := make([]resources.AFileInfo, 0)
+
+	if err := global.GVA_DB.Find(&list, "tag = ?", tag).Error; err != nil {
+		global.GVA_LOG.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage("获取失败", c)
+	} else {
+		response.OkWithDetailed(list, "获取成功", c)
 	}
 }

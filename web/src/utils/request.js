@@ -77,14 +77,14 @@ service.interceptors.response.use(
         response.data.msg = decodeURI(response.headers.msg)
       }
       return response.data
-    } else {
+    } else if (response.data.code !== undefined) {
       ElMessage({
         showClose: true,
         message: response.data.msg || decodeURI(response.headers.msg),
         type: 'error'
       })
-      return response.data.msg ? response.data : response
     }
+    return response.data.msg ? response.data : response
   },
   error => {
     if (!error.config.donNotShowLoading) {

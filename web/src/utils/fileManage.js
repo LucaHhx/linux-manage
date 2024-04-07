@@ -1,6 +1,6 @@
 
 import FileSystemError from 'devextreme/file_management/error'
-
+import SparkMD5 from 'spark-md5'
 export function fileErr(code, message) {
   return new Promise((resolve, reject) => {
     reject(new FileSystemError(code, null, message))
@@ -31,4 +31,15 @@ export const getFileMD5 = (file) => {
     // 读取文件内容，以便计算MD5
     reader.readAsArrayBuffer(file)
   })
+}
+
+export function openDownload(blob, fileName) {
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = fileName.replace(/['"]/g, '') // 去掉可能的引号
+  document.body.appendChild(a) // 这一行可选
+  a.click()
+  window.URL.revokeObjectURL(url)
+  document.body.removeChild(a) // 这一行可选
 }

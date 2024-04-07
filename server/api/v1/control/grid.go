@@ -11,11 +11,11 @@ type GridApi struct {
 }
 
 var GridService = service.ServiceGroupApp.ControlServiceGroup.GridService
-var ServiceCacheGroup = cache.ServiceCacheGroup.ControlGrid
+var GridCache = cache.CacheExamples.Grid
 
 func (g *GridApi) GetGridCache(c *gin.Context) {
 	key := c.Query("key")
-	grid, _ := ServiceCacheGroup.GetControlGrid(key)
+	grid, _ := GridCache.GetControlGrid(key)
 	response.OkWithDetailed(grid, "获取成功", c)
 }
 
@@ -29,7 +29,7 @@ func (g *GridApi) SetGridCache(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = ServiceCacheGroup.SetControlGrid(gridCache.Key, gridCache.Value)
+	err = GridCache.SetControlGrid(gridCache.Key, gridCache.Value)
 	if err != nil {
 		response.FailWithMessage("设置失败", c)
 	} else {
@@ -39,7 +39,7 @@ func (g *GridApi) SetGridCache(c *gin.Context) {
 
 func (g *GridApi) DelGridCache(c *gin.Context) {
 	key := c.Query("key")
-	err := ServiceCacheGroup.DelControlGrid(key)
+	err := GridCache.DelControlGrid(key)
 	if err != nil {
 		response.FailWithMessage("删除失败", c)
 	} else {

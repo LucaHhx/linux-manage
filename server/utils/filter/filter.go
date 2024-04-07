@@ -1,14 +1,13 @@
 package filter
 
 import (
-	"fmt"
 	"reflect"
 )
 
 type Condition struct {
-	Operator string //操作符
-	Field    string //字段
-	Value    string //值
+	Operator string      //操作符
+	Field    string      //字段
+	Value    interface{} //值
 }
 
 type Expression struct {
@@ -54,7 +53,7 @@ func isCondition(data []interface{}) (bool, *Condition) {
 		return true, &Condition{
 			Operator: data[1].(string),
 			Field:    data[0].(string),
-			Value:    fmt.Sprintf("%v", data[2]),
+			Value:    data[2],
 		}
 	}
 	return false, nil

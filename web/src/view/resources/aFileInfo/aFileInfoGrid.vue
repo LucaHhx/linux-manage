@@ -65,7 +65,6 @@
         <DxColumn data-field="thumbnail" data-type="string" caption="图标路径" />
         <DxColumn data-field="tag" data-type="string" caption="标签" />
         <DxColumn data-field="isMain" data-type="boolean" caption="主目录" />
-
         <DxColumn data-field="CreatedAt" data-type="datetime" width="150" caption="创建时间" />
         <DxColumn data-field="UpdatedAt" data-type="datetime" width="150" caption="最近修改" />
 
@@ -88,11 +87,11 @@
             <FDxItem data-field="name" data-type="string" />
             <FDxItem data-field="dateModified" data-type="datetime" />
             <FDxItem data-field="size" data-type="number" />
-            <FDxItem data-field="bool" data-type="boolean" />
-            <FDxItem data-field="bool" data-type="boolean" />
+            <FDxItem data-field="isDirectory" data-type="boolean" />
+            <FDxItem data-field="hasSubDirectories" data-type="boolean" />
             <FDxItem data-field="thumbnail" data-type="string" />
             <FDxItem data-field="tag" data-type="string" />
-            <FDxItem data-field="bool" data-type="boolean" />
+            <FDxItem data-field="isMain" data-type="boolean" />
 
           </DxForm>
         </DxEditing>

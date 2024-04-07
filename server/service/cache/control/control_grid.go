@@ -5,21 +5,21 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 )
 
-type ControlGrid struct {
+type Grid struct {
 }
 
-func (cg ControlGrid) GetControlGridKey() string {
+func (cg Grid) GetControlGridKey() string {
 	return "{control_grid}"
 }
 
-func (cg ControlGrid) GetControlGrid(key string) (string, error) {
+func (cg Grid) GetControlGrid(key string) (string, error) {
 	return global.GVA_REDIS.HGet(context.Background(), cg.GetControlGridKey(), key).Result()
 }
 
-func (cg ControlGrid) SetControlGrid(key, value string) error {
+func (cg Grid) SetControlGrid(key, value string) error {
 	return global.GVA_REDIS.HSet(context.Background(), cg.GetControlGridKey(), key, value).Err()
 }
 
-func (cg ControlGrid) DelControlGrid(key string) error {
+func (cg Grid) DelControlGrid(key string) error {
 	return global.GVA_REDIS.HDel(context.Background(), cg.GetControlGridKey(), key).Err()
 }

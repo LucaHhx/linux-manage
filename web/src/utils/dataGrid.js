@@ -44,7 +44,6 @@ export const getGridCacheOperate = (grid, gridCacheKey) => {
       onClick: async() => {
         const res = await getGridCache({ key: gridCacheKey })
         if (res.code === 0 && res.data) {
-          console.log(res.data)
           const data = JSON.parse(res.data)
           grid?.value?.instance?.state(data)
         }

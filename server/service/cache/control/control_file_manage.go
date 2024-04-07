@@ -2,19 +2,36 @@ package control
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/control"
 )
 
-const ControlFileManage = "{control_file_manage}"
-
-func GetAttribute(key string) (string, error) {
-	return global.GVA_REDIS.HGet(context.Background(), ControlFileManage, key).Result()
+type FileManage struct {
 }
 
-func SetAttribute(key string, value interface{}) error {
-	return global.GVA_REDIS.HSet(context.Background(), ControlFileManage, key, value).Err()
+func (fm FileManage) GetControlFileManageKey() string {
+	return "{control_file_manage}"
 }
 
-func DelAttribute(key string) error {
-	return global.GVA_REDIS.HDel(context.Background(), ControlFileManage, key).Err()
+func (fm FileManage) GetControlFileManage(key string) (*control.FileManageOption, error) {
+	bytes, err := global.GVA_REDIS.HGet(context.Background(), fm.GetControlFileManageKey(), key).Bytes()
+	if err != nil {
+		return nil, nil
+	}
+	var option *control.FileManageOption
+	err = json.Unmarshal(bytes, &option)
+	return option, err
+}
+
+func (fm FileManage) SetControlFileManage(key string, value control.FileManageOption) error {
+	bytes, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+	return global.GVA_REDIS.HSet(context.Background(), fm.GetControlFileManageKey(), key, bytes).Err()
+}
+
+func (fm FileManage) DelControlFileManage(key string) error {
+	return global.GVA_REDIS.HDel(context.Background(), fm.GetControlFileManageKey(), key).Err()
 }

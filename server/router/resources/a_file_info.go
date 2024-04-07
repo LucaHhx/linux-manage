@@ -19,9 +19,11 @@ func (s *AFileInfoRouter) InitAFileInfoRouter(Router *gin.RouterGroup) {
 		aFileInfoRouter.DELETE("deleteAFileInfo", aFileInfoApi.DeleteAFileInfo)           // 删除aFileInfo表
 		aFileInfoRouter.DELETE("deleteAFileInfoByIds", aFileInfoApi.DeleteAFileInfoByIds) // 批量删除aFileInfo表
 		aFileInfoRouter.PUT("updateAFileInfo", aFileInfoApi.UpdateAFileInfo)              // 更新aFileInfo表
+		aFileInfoRouter.PUT("saveAFileInfo", aFileInfoApi.SaveAFileInfo)                  // 更新aFileInfo表
 	}
 	{
-		aFileInfoRouterWithoutRecord.GET("findAFileInfo", aFileInfoApi.FindAFileInfo)        // 根据ID获取aFileInfo表
-		aFileInfoRouterWithoutRecord.POST("getAFileInfoList", aFileInfoApi.GetAFileInfoList) // 获取aFileInfo表列表
+		aFileInfoRouterWithoutRecord.GET("findAFileInfo", aFileInfoApi.FindAFileInfo)             // 根据ID获取aFileInfo表
+		aFileInfoRouterWithoutRecord.POST("getAFileInfoList", aFileInfoApi.GetAFileInfoList)      // 获取aFileInfo表列表
+		aFileInfoRouterWithoutRecord.GET("getTagAFileInfoList", aFileInfoApi.GetTagAFileInfoList) // 获取aFileInfo表列表
 	}
 }

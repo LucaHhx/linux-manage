@@ -1,5 +1,6 @@
 **/.idea
 **/.vscode
+**/rm_file
 
 /web/node_modules
 /web/dist
