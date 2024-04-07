@@ -1,7 +1,7 @@
 **/.idea
 **/.vscode
 **/rm_file
-
+**/breakpointDir
 /web/node_modules
 /web/dist
 
