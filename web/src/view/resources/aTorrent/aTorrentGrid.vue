@@ -64,7 +64,12 @@
         <DxColumn data-field="magnet" data-type="string" caption="链接" />
         <DxColumn data-field="CreatedAt" data-type="datetime" width="150" caption="创建时间" />
         <DxColumn data-field="UpdatedAt" data-type="datetime" width="150" caption="最近修改" />
-
+        <DxColumn type="buttons">
+          <DxButton name="save" css-class="my-class" />
+          <DxButton name="edit" />
+          <DxButton name="delete" />
+          <DxButton text="AA" @click="dow" />
+        </DxColumn>
         <DxEditing
           :allow-updating="true"
           :allow-adding="true"
@@ -122,7 +127,7 @@
               :value="progressMap[data.data.ID]"
               width="90%"
             />
-            <button @click=" console.log(data);">{{ data.value }}</button>
+            <!-- <button @click=" console.log(data);">{{ data.value }}</button> -->
           </div>
 
         </template>
@@ -156,12 +161,13 @@ import {
   DxPopup,
   DxSummary,
   DxGroupItem,
-  DxLoadPanel
+  DxLoadPanel,
+  DxButton
 } from 'devextreme-vue/data-grid'
 import {
   DxItem as FDxItem,
 } from 'devextreme-vue/form'
-import DxButton from 'devextreme-vue/button'
+// import DxButton from 'devextreme-vue/button'
 import { DxProgressBar } from 'devextreme-vue/progress-bar'
 import DxDropDownButton from 'devextreme-vue/drop-down-button'
 import { confirm } from 'devextreme/ui/dialog'
@@ -292,5 +298,11 @@ const deleteRecords = async() => {
   })
 }
 
+const dow = (aa) => {
+  console.log('dow', aa)
+}
+const progressBarstatus = (r, v) => {
+  console.log(r, v)
+}
 </script>
 <style scoped></style>

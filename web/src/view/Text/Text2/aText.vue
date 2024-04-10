@@ -167,7 +167,8 @@ import {
   findAText,
   getATextList
 } from '@/api/aText'
-
+import { starx } from '@/utils/starx-wsclient'
+import { userMessage } from '@/protobuf/proto/room'
 // 选项
 const typeOpts = [
   { key: 1, value: 'Type1' },
@@ -175,7 +176,9 @@ const typeOpts = [
   { key: 3, value: 'Type3' },
   { key: 4, value: 'Type4' }
 ]
+const aa = userMessage.encode({ name: 'huang', content: 'hello' })
 
+starx.notify('room.message', { name: 'huang', content: 'hello' })
 // 缓存
 const gridCacheKey = 'aTextGrid'
 const grid = ref(null)

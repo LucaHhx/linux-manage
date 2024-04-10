@@ -1,0 +1,22 @@
+syntax = "proto3";
+package game;
+option go_package = "server/protobuf/pbs/room";
+//import "proto/common/common.proto";
+
+message user_message{
+  string name = 1;
+  string content = 2;
+}
+
+message new_user{
+  string content = 1;
+}
+
+message all_members{
+  repeated int64 members = 1;
+}
+
+message join_response{
+  int32 code = 1;
+  string result = 2;
+}

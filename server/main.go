@@ -4,6 +4,14 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/core"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/initialize"
+	"github.com/flipped-aurora/gin-vue-admin/server/initialize/websocket/common"
+	"github.com/flipped-aurora/gin-vue-admin/server/initialize/websocket/test"
+	"github.com/lonng/nano"
+	"github.com/lonng/nano/component"
+	"github.com/lonng/nano/pipeline"
+	"log"
+	"net/http"
+	"strings"
 )
 
 //go:generate go env -w GO111MODULE=on
@@ -26,5 +34,33 @@ func main() {
 		db, _ := global.GVA_DB.DB()
 		defer db.Close()
 	}
+	go RunWebsocket()
 	core.RunWindowsServer()
+}
+
+func RunWebsocket() {
+	components := &component.Components{}
+	components.Register(
+		test.NewRoomManager(),
+		component.WithName("room"), // rewrite component and handler name
+		component.WithNameFunc(strings.ToLower),
+	)
+
+	pip := pipeline.New()
+	var stats = &test.Stats{}
+	pip.Outbound().PushBack(stats.Outbound)
+	pip.Inbound().PushBack(stats.Inbound)
+
+	log.SetFlags(log.LstdFlags | log.Llongfile)
+	http.Handle("/web/", http.StripPrefix("/web/", http.FileServer(http.Dir("web"))))
+
+	nano.Listen(":3250",
+		nano.WithIsWebsocket(true),
+		nano.WithPipeline(pip),
+		nano.WithCheckOriginFunc(func(_ *http.Request) bool { return true }),
+		nano.WithWSPath("/nano"),
+		nano.WithDebugMode(),
+		nano.WithSerializer(common.NewSerializer()), // override default serializer
+		nano.WithComponents(components),
+	)
 }
