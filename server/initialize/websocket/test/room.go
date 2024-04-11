@@ -2,12 +2,15 @@ package test
 
 import (
 	"fmt"
+	"github.com/flipped-aurora/gin-vue-admin/server/protobuf/pbs/common"
 	room2 "github.com/flipped-aurora/gin-vue-admin/server/protobuf/pbs/room"
 	"github.com/lonng/nano"
 	"github.com/lonng/nano/component"
 	"github.com/lonng/nano/pipeline"
 	"github.com/lonng/nano/scheduler"
 	"github.com/lonng/nano/session"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 	"time"
 )
 
@@ -77,8 +80,10 @@ func (mgr *RoomManager) AfterInit() {
 }
 
 // Join room
-func (mgr *RoomManager) Join(s *session.Session, msg []byte) error {
+func (mgr *RoomManager) Join(s *session.Session, req *common.BasicReq) error {
 	// NOTE: join test room only in demo
+	newCard := &room2.UserMessage{}
+	anypb.UnmarshalTo(req.Data, newCard, proto.UnmarshalOptions{})
 	room, found := mgr.rooms[testRoomID]
 	if !found {
 		room = &Room{

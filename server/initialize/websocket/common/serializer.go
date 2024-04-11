@@ -1,7 +1,6 @@
 package common
 
 import (
-	"encoding/json"
 	"errors"
 	"google.golang.org/protobuf/proto"
 )
@@ -29,5 +28,9 @@ func (s *Serializer) Marshal(v interface{}) ([]byte, error) {
 // Unmarshal parses the protobuf-encoded data and stores the result
 // in the value pointed to by v.
 func (s *Serializer) Unmarshal(data []byte, v interface{}) error {
-	return json.Unmarshal(data, v)
+	pb, ok := v.(proto.Message)
+	if !ok {
+		return ErrWrongValueType
+	}
+	return proto.Unmarshal(data, pb)
 }

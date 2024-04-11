@@ -167,7 +167,7 @@ import {
   findAText,
   getATextList
 } from '@/api/aText'
-import { starx } from '@/utils/starx-wsclient'
+import { websocket } from '@/protobuf/websocket/register'
 import { userMessage } from '@/protobuf/proto/room'
 // 选项
 const typeOpts = [
@@ -178,7 +178,7 @@ const typeOpts = [
 ]
 const aa = userMessage.encode({ name: 'huang', content: 'hello' })
 
-starx.notify('room.message', { name: 'huang', content: 'hello' })
+websocket.notify('room.message', aa.finish())
 // 缓存
 const gridCacheKey = 'aTextGrid'
 const grid = ref(null)

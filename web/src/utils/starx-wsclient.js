@@ -1,99 +1,46 @@
-import { Protocol } from './protocol'
-function Emitter(obj) {
-  if (obj) return mixin(obj)
-}
-/**
-   * Mixin the emitter properties.
-   *
-   * @param {Object} obj
-   * @return {Object}
-   * @api private
-   */
+import Protocol from './protocol'
+import { ElMessage } from 'element-plus'
 
-function mixin(obj) {
-  for (var key in Emitter.prototype) {
-    obj[key] = Emitter.prototype[key]
+class Emitter {
+  constructor(obj) {
+    if (obj) return mixin(obj)
   }
-  return obj
-}
 
-/**
-   * Listen on the given `event` with `fn`.
-   *
-   * @param {String} event
-   * @param {Function} fn
-   * @return {Emitter}
-   * @api public
-   */
-
-Emitter.prototype.on =
-  Emitter.prototype.addEventListener = function(event, fn) {
+  on(event, fn) {
     this._callbacks = this._callbacks || {};
-    (this._callbacks[event] = this._callbacks[event] || [])
-      .push(fn)
+    (this._callbacks[event] = this._callbacks[event] || []).push(fn)
     return this
   }
 
-/**
-   * Adds an `event` listener that will be invoked a single
-   * time then automatically removed.
-   *
-   * @param {String} event
-   * @param {Function} fn
-   * @return {Emitter}
-   * @api public
-   */
+  once(event, fn) {
+    function on() {
+      this.off(event, on)
+      fn.apply(this, arguments)
+    }
 
-Emitter.prototype.once = function(event, fn) {
-  var self = this
-  this._callbacks = this._callbacks || {}
-
-  function on() {
-    self.off(event, on)
-    fn.apply(this, arguments)
+    on.fn = fn
+    this.on(event, on)
+    return this
   }
 
-  on.fn = fn
-  this.on(event, on)
-  return this
-}
-
-/**
-   * Remove the given callback for `event` or all
-   * registered callbacks.
-   *
-   * @param {String} event
-   * @param {Function} fn
-   * @return {Emitter}
-   * @api public
-   */
-
-Emitter.prototype.off =
-  Emitter.prototype.removeListener =
-  Emitter.prototype.removeAllListeners =
-  Emitter.prototype.removeEventListener = function(event, fn) {
+  off(event, fn) {
     this._callbacks = this._callbacks || {}
 
-    // all
-    if (arguments.length == 0) {
+    if (arguments.length === 0) {
       this._callbacks = {}
       return this
     }
 
-    // specific event
-    var callbacks = this._callbacks[event]
+    const callbacks = this._callbacks[event]
     if (!callbacks) return this
 
-    // remove all handlers
-    if (arguments.length == 1) {
+    if (arguments.length === 1) {
       delete this._callbacks[event]
       return this
     }
 
-    // remove specific handler
-    var cb
-    for (var i = 0; i < callbacks.length; i++) {
-      cb = callbacks[i]
+    for (let i = 0; i < callbacks.length; i++) {
+      const cb = callbacks[i]
       if (cb === fn || cb.fn === fn) {
         callbacks.splice(i, 1)
         break
@@ -102,59 +49,45 @@ Emitter.prototype.off =
     return this
   }
 
-/**
-   * Emit `event` with the given args.
-   *
-   * @param {String} event
-   * @param {Mixed} ...
-   * @return {Emitter}
-   */
+  emit(event) {
+    this._callbacks = this._callbacks || {}
+    var args = [].slice.call(arguments, 1)
+    var callbacks = this._callbacks[event]
 
-Emitter.prototype.emit = function(event) {
-  this._callbacks = this._callbacks || {}
-  var args = [].slice.call(arguments, 1)
-  var callbacks = this._callbacks[event]
-
-  if (callbacks) {
-    callbacks = callbacks.slice(0)
-    for (var i = 0, len = callbacks.length; i < len; ++i) {
-      callbacks[i].apply(this, args)
+    if (callbacks) {
+      callbacks = callbacks.slice(0)
+      for (var i = 0, len = callbacks.length; i < len; ++i) {
+        callbacks[i].apply(this, args)
+      }
     }
+
+    return this
   }
 
-  return this
+  listeners(event) {
+    this._callbacks = this._callbacks || {}
+    return this._callbacks[event] || []
+  }
+
+  hasListeners(event) {
+    return !!this.listeners(event).length
+  }
 }
 
-/**
-   * Return array of callbacks for `event`.
-   *
-   * @param {String} event
-   * @return {Array}
-   * @api public
-   */
-
-Emitter.prototype.listeners = function(event) {
-  this._callbacks = this._callbacks || {}
-  return this._callbacks[event] || []
+// Helper function to mixin Emitter properties
+function mixin(obj) {
+  for (const key in Emitter.prototype) {
+    obj[key] = Emitter.prototype[key]
+  }
+  return obj
 }
 
-/**
-   * Check if this emitter has `event` handlers.
-   *
-   * @param {String} event
-   * @return {Boolean}
-   * @api public
-   */
-
-Emitter.prototype.hasListeners = function(event) {
-  return !!this.listeners(event).length
-}
 var JS_WS_CLIENT_TYPE = 'js-websocket'
 var JS_WS_CLIENT_VERSION = '0.0.1'
 
-// var Protocol = window.Protocol
 var decodeIO_encoder = null
 var decodeIO_decoder = null
+var isJson = false
 var Package = Protocol.Package
 var Message = Protocol.Message
 var EventEmitter = Emitter
@@ -170,15 +103,133 @@ var RES_OLD_CLIENT = 501
 
 if (typeof Object.create !== 'function') {
   Object.create = function(o) {
-    function F() {}
+    function F() { }
     F.prototype = o
     return new F()
   }
 }
 
+class Starx extends Emitter {
+  constructor() {
+    super()
+    // Extend Emitter with starx specific properties
+    mixin(this)
+  }
+
+  init(params, cb, closeCb) {
+    initCallback = cb
+    var host = params.host
+    var port = params.port
+    var path = params.path
+
+    encode = params.encode || defaultEncode
+    decode = params.decode || defaultDecode
+
+    var url = 'ws://' + host
+    if (port) {
+      url += ':' + port
+    }
+
+    if (path) {
+      url += path
+    }
+
+    handshakeBuffer.user = params.user
+    if (params.encrypt) {
+      useCrypto = true
+      rsa.generate(1024, '10001')
+      var data = {
+        rsa_n: rsa.n.toString(16),
+        rsa_e: rsa.e
+      }
+      handshakeBuffer.sys.rsa = data
+    }
+    handshakeCallback = params.handshakeCallback
+    connect(params, url, cb, closeCb)
+  }
+
+  decode(data) {
+    var msg = Message.decode(data)
+
+    if (msg.id > 0) {
+      msg.route = routeMap[msg.id]
+      delete routeMap[msg.id]
+      if (!msg.route) {
+        return
+      }
+    }
+
+    msg.body = deCompose(msg)
+    return msg
+  }
+
+  encode(reqId, route, msg) {
+    var type = reqId ? Message.TYPE_REQUEST : Message.TYPE_NOTIFY
+
+    // if (isJson) {
+    //   msg = Protocol.strencode(JSON.stringify(msg))
+    // }
+
+    console.log('encode', msg, Protocol.strencode(JSON.stringify(msg)))
+    // msg = Protocol.strencode(JSON.stringify(msg))
+    var compressRoute = 0
+    if (dict && dict[route]) {
+      route = dict[route]
+      compressRoute = 1
+    }
+
+    return Message.encode(reqId, type, compressRoute, route, msg)
+  }
+
+  disconnect() {
+    if (socket) {
+      if (socket.disconnect) socket.disconnect()
+      if (socket.close) socket.close()
+      console.log('disconnect')
+      socket = null
+    }
+
+    if (heartbeatId) {
+      clearTimeout(heartbeatId)
+      heartbeatId = null
+    }
+    if (heartbeatTimeoutId) {
+      clearTimeout(heartbeatTimeoutId)
+      heartbeatTimeoutId = null
+    }
+  }
+
+  request(route, msg, cb) {
+    if (arguments.length === 2 && typeof msg === 'function') {
+      cb = msg
+      msg = {}
+    } else {
+      msg = msg || {}
+    }
+    route = route || msg.route
+    if (!route) {
+      return
+    }
+
+    reqId++
+    sendMessage(reqId, route, msg)
+
+    callbacks[reqId] = cb
+    routeMap[reqId] = route
+  }
+
+  notify(route, msg) {
+    msg = msg || {}
+    sendMessage(0, route, msg)
+  }
+  // ... (Starx-specific methods like init, request, notify, etc.) ...
+}
+
 var root = window
-export var starx = Object.create(EventEmitter.prototype) // object extend from object
-root.starx = starx
+
+export const starx = new Starx()
+window.starx = starx
+
 var socket = null
 var reqId = 0
 var callbacks = {}
@@ -220,73 +271,11 @@ var handshakeBuffer = {
 
 var initCallback = null
 
-starx.init = function(params, cb) {
-  initCallback = cb
-  var host = params.host
-  var port = params.port
-  var path = params.path
+var defaultDecode = starx.decode
 
-  encode = params.encode || defaultEncode
-  decode = params.decode || defaultDecode
+var defaultEncode = starx.encode
 
-  var url = 'ws://' + host
-  if (port) {
-    url += ':' + port
-  }
-
-  if (path) {
-    url += path
-  }
-
-  handshakeBuffer.user = params.user
-  if (params.encrypt) {
-    useCrypto = true
-    rsa.generate(1024, '10001')
-    var data = {
-      rsa_n: rsa.n.toString(16),
-      rsa_e: rsa.e
-    }
-    handshakeBuffer.sys.rsa = data
-  }
-  handshakeCallback = params.handshakeCallback
-  connect(params, url, cb)
-}
-
-var defaultDecode = starx.decode = function(data) {
-  var msg = Message.decode(data)
-
-  if (msg.id > 0) {
-    msg.route = routeMap[msg.id]
-    delete routeMap[msg.id]
-    if (!msg.route) {
-      return
-    }
-  }
-
-  msg.body = deCompose(msg)
-  return msg
-}
-
-var defaultEncode = starx.encode = function(reqId, route, msg) {
-  var type = reqId ? Message.TYPE_REQUEST : Message.TYPE_NOTIFY
-
-  if (decodeIO_encoder && decodeIO_encoder.lookup(route)) {
-    var Builder = decodeIO_encoder.build(route)
-    msg = new Builder(msg).encodeNB()
-  } else {
-    msg = Protocol.strencode(JSON.stringify(msg))
-  }
-
-  var compressRoute = 0
-  if (dict && dict[route]) {
-    route = dict[route]
-    compressRoute = 1
-  }
-
-  return Message.encode(reqId, type, compressRoute, route, msg)
-}
-
-var connect = function(params, url, cb) {
+var connect = function(params, url, cb, closeCb) {
   console.log('connect to ' + url)
 
   var params = params || {}
@@ -301,6 +290,7 @@ var connect = function(params, url, cb) {
     var obj = Package.encode(Package.TYPE_HANDSHAKE, Protocol.strencode(JSON.stringify(handshakeBuffer)))
     send(obj)
   }
+
   var onmessage = function(event) {
     processPackage(Package.decode(event.data), cb)
     // new package arrived, update the heartbeat timeout
@@ -310,17 +300,23 @@ var connect = function(params, url, cb) {
   }
   var onerror = function(event) {
     starx.emit('io-error', event)
-    console.error('socket error: ', event)
+    ElMessage.error('socket error: ', event)
   }
+
   var onclose = function(event) {
     starx.emit('close', event)
     starx.emit('disconnect', event)
     console.log('socket close: ', event)
+    // 断线回调
+    if (typeof closeCb === 'function') {
+      closeCb(event)
+    }
+
     if (!!params.reconnect && reconnectAttempts < maxReconnectAttempts) {
       reconnect = true
       reconnectAttempts++
       reconncetTimer = setTimeout(function() {
-        connect(params, reconnectUrl, cb)
+        connect(params, reconnectUrl, cb, closeCb)
       }, reconnectionDelay)
       reconnectionDelay *= 2
     }
@@ -333,53 +329,11 @@ var connect = function(params, url, cb) {
   socket.onclose = onclose
 }
 
-starx.disconnect = function() {
-  if (socket) {
-    if (socket.disconnect) socket.disconnect()
-    if (socket.close) socket.close()
-    console.log('disconnect')
-    socket = null
-  }
-
-  if (heartbeatId) {
-    clearTimeout(heartbeatId)
-    heartbeatId = null
-  }
-  if (heartbeatTimeoutId) {
-    clearTimeout(heartbeatTimeoutId)
-    heartbeatTimeoutId = null
-  }
-}
-
 var reset = function() {
   reconnect = false
   reconnectionDelay = 1000 * 5
   reconnectAttempts = 0
   clearTimeout(reconncetTimer)
-}
-
-starx.request = function(route, msg, cb) {
-  if (arguments.length === 2 && typeof msg === 'function') {
-    cb = msg
-    msg = {}
-  } else {
-    msg = msg || {}
-  }
-  route = route || msg.route
-  if (!route) {
-    return
-  }
-
-  reqId++
-  sendMessage(reqId, route, msg)
-
-  callbacks[reqId] = cb
-  routeMap[reqId] = route
-}
-
-starx.notify = function(route, msg) {
-  msg = msg || {}
-  sendMessage(0, route, msg)
 }
 
 var sendMessage = function(reqId, route, msg) {
@@ -434,7 +388,7 @@ var heartbeatTimeoutCb = function() {
   if (gap > gapThreshold) {
     heartbeatTimeoutId = setTimeout(heartbeatTimeoutCb, gap)
   } else {
-    console.error('server heartbeat timeout')
+    ElMessage.error('server heartbeat timeout')
     starx.emit('heartbeat timeout')
     starx.disconnect()
   }
@@ -526,11 +480,9 @@ var deCompose = function(msg) {
     route = msg.route = abbrs[route]
   }
 
-  // if (decodeIO_decoder && decodeIO_decoder.lookup(route)) {
-  //   return decodeIO_decoder.build(route).decode(msg.body)
-  // } else {
-  //   return JSON.parse(Protocol.strdecode(msg.body))
-  // }
+  if (isJson) {
+    return JSON.parse(Protocol.strdecode(msg.body))
+  }
 
   return msg.body
 }

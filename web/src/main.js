@@ -20,7 +20,7 @@ import { store } from '@/pinia'
 import App from './App.vue'
 import { initDom } from './utils/positionToCode'
 import '@/utils/protocol'
-import '@/protobuf/websocket/init'
+import starx from '@/protobuf/websocket/init'
 initDom()
 /**
  * @description 导入加载进度条，防止首屏加载时间过长，用户等待
@@ -41,6 +41,7 @@ app.config.productionTip = false
 app
   .use(run)
   .use(store)
+  .use(starx)
   .use(auth)
   .use(router)
   .mount('#app')

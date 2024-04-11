@@ -1,9 +1,33 @@
 syntax = "proto3";
-package game;
+package common;
 option go_package = "server/protobuf/pbs/common";
+import "google/protobuf/any.proto";
+//通用code
+enum Code {
+   Unknown = 0; //未知
+   Ok = 1; //成功
+   TokenInvalid = 401; //token失效
+   ParameterError = 402; //参数错误
+   Exists = 403; //已存在
+   NotExists = 404; //不存在
+   SystemError = 405; //系统错误
+   DbError = 406; //数据库错误
+   StatusError = 407; //状态错误
+   AmountInsufficientError = 408; //余额不足
+}
 
-message req_head{
-   string router = 1;
+
+message reqHead{
    string token = 2;
    int32 user_id = 3;
+}
+
+message repHead{
+    Code code = 1;
+    string msg = 2;
+}
+
+message basicReq {
+    reqHead head = 1;
+    google.protobuf.Any data = 2;
 }
