@@ -24,23 +24,24 @@ var onNewUser = function(data) {
 }
 
 var onMembers = function(data) {
-  console.log('onMembers', allMembers.decode(data))
+  console.log('onMembers', Protos.room.allMembers.decode(data))
   // v.messages.push({ name: 'system', content: 'members: ' + data.members })
 }
 
 export default {
   install: (app) => {
     const userStore = useUserStore()
-    var userMessage = Protos['room.userMessage']
-    var BasicReq = Protos['common.basicReq']
-    var Any = Protos['google.protobuf.Any']
-    const userMessageInfo = userMessage.encode({ name: 'Huang', content: 'hello' })
+    // var userMessage = Protos['room.userMessage']
+    // var BasicReq = Protos['common.basicReq']
+    // var Any = Protos['google.protobuf.Any']
+    console.log(typeof (Protos.room.userMessage).fullName)
+    const userMessageInfo = Protos.room.userMessage.encode({ name: 'Huang', content: 'hello' })
     console.log('userStore.userInfo.ID', userStore.userInfo.ID)
-    const aa = BasicReq.encode({ head: {
+    const aa = Protos.common.basicReq.encode({ head: {
       token: userStore.token,
       userId: userStore.userInfo.ID,
     },
-    data: Any.fromPartial({ typeUrl: userMessage.getFullName(), value: userMessageInfo.finish() })
+    data: Protos.googleAny.Any.fromPartial({ typeUrl: Protos.room.userMessage.$type.fullName, value: userMessageInfo.finish() })
     })
 
     starx.init({ host: location.hostname, port: 3250, path: '/nano' }, function() {

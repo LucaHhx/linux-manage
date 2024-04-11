@@ -2,20 +2,24 @@ import * as room from '@/protobuf/proto/room'
 import * as common from '@/protobuf/proto/common'
 import * as googleAny from '@/google/protobuf/any'
 
-export var Protos = {}
-
-function mergeNamespacesIntoProtos(namespace, namespaceName) {
-  for (const key in namespace) {
-    const fullName = `${namespaceName}.${key}`
-    Protos[fullName] = {
-      ...namespace[key],
-      getFullName: function() { return fullName } // 修改了方法名
-    }
-  }
+export var Protos = {
+  room,
+  common,
+  googleAny
 }
 
-mergeNamespacesIntoProtos(room, 'room')
-mergeNamespacesIntoProtos(common, 'common')
-mergeNamespacesIntoProtos(googleAny, 'google.protobuf')
+// function mergeNamespacesIntoProtos(namespace, namespaceName) {
+//   for (const key in namespace) {
+//     const fullName = `${namespaceName}.${key}`
+//     Protos[fullName] = {
+//       ...namespace[key],
+//       getFullName: function() { return fullName } // 修改了方法名
+//     }
+//   }
+// }
 
-console.log(Protos)
+// mergeNamespacesIntoProtos(room, room.protobufPackage)
+// mergeNamespacesIntoProtos(common, common.protobufPackage)
+// mergeNamespacesIntoProtos(googleAny, googleAny.protobufPackage)
+
+console.log('Protos', Protos)
