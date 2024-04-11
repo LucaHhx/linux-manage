@@ -2,7 +2,7 @@
 import Long from "long";
 import _m0 from "protobufjs/minimal";
 
-export const protobufPackage = "game";
+export const protobufPackage = "room";
 
 export interface userMessage {
   name: string;

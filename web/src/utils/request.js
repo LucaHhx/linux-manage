@@ -41,7 +41,6 @@ service.interceptors.request.use(
       showLoading(config.loadingOption)
     }
     const userStore = useUserStore()
-    console.log(userStore.userInfo.ID)
     config.headers = {
       'Content-Type': 'application/json',
       'x-token': userStore.token,
