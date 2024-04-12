@@ -1,24 +1,56 @@
 package torrent
 
 import (
-	cmap "github.com/orcaman/concurrent-map/v2"
+	"fmt"
+	"github.com/anacrolix/torrent"
+	"github.com/flipped-aurora/gin-vue-admin/server/enum"
 )
 
-type MagnetTask struct {
-	tMap cmap.ConcurrentMap[uint, *Torrent]
+type DownloadTask interface {
+	StartTorrent()
+	SetProgress()
+	StopTorrent()
+	FinishTorrent()
+	GetKey() int
 }
 
-func sharding(key uint) uint32 {
-	return uint32(key)
+type MagnetClient struct {
+	client  *torrent.Client
+	taskMap map[int]DownloadTask
 }
-func NewMagnetTask() *MagnetTask {
-	return &MagnetTask{
-		tMap: cmap.NewWithCustomShardingFunction[uint, *Torrent](sharding),
+
+func (m *MagnetClient) GetClient() *torrent.Client {
+	return m.client
+}
+
+func createClient() *torrent.Client {
+	config := torrent.NewDefaultClientConfig()
+	config.DataDir = enum.Torrent_Dir
+	c, err := torrent.NewClient(config)
+	if err != nil {
+		panic(err)
+	}
+	return c
+}
+
+func NewMagnetClient() *MagnetClient {
+	return &MagnetClient{
+		client:  createClient(),
+		taskMap: make(map[int]DownloadTask),
 	}
 }
 
-var MagnetTaskInstance = NewMagnetTask()
+func (m *MagnetClient) Download(task DownloadTask) error {
+	m.taskMap[task.GetKey()] = task
+	go task.StartTorrent()
+	return nil
+}
 
-func (m *MagnetTask) Set(t *Torrent) {
-	m.tMap.Set(t.aTorrent.ID, t)
+func (m *MagnetClient) Stop(id int) error {
+	task, ok := m.taskMap[id]
+	if !ok {
+		return fmt.Errorf("task not found")
+	}
+	task.StopTorrent()
+	return nil
 }

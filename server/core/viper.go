@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/flipped-aurora/gin-vue-admin/server/core/internal"
 	"github.com/flipped-aurora/gin-vue-admin/server/initialize"
+	"github.com/flipped-aurora/gin-vue-admin/server/initialize/torrent"
+	"github.com/flipped-aurora/gin-vue-admin/server/plugin/websocket"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"os"
@@ -83,8 +85,10 @@ func Init() {
 	global.GVA_DB = initialize.Gorm() // gorm连接数据库
 	initialize.Timer()
 	initialize.DBList()
+	global.GVA_SOCKET = websocket.NewSocketClient()
 	if global.GVA_CONFIG.System.UseMultipoint || global.GVA_CONFIG.System.UseRedis {
 		// 初始化redis服务
 		initialize.Redis()
 	}
+	global.GVA_TORRENT = torrent.NewMagnetClient()
 }

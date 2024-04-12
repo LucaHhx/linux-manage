@@ -1,0 +1,13 @@
+syntax = "proto3";
+package resources;
+option go_package = "server/protobuf/pbs/resources";
+
+
+message downloadInfo {
+  int32 id = 1;
+  int32 progress = 2;
+  string finish_bytes = 3;
+  string total_bytes = 4;
+  string speed = 5;
+  bool is_finished = 6;
+}

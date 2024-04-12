@@ -4,12 +4,9 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/core"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/initialize"
-	"github.com/flipped-aurora/gin-vue-admin/server/initialize/websocket/common"
-	"github.com/flipped-aurora/gin-vue-admin/server/initialize/websocket/test"
+	"github.com/flipped-aurora/gin-vue-admin/server/plugin/websocket"
 	"github.com/lonng/nano"
 	"github.com/lonng/nano/component"
-	"github.com/lonng/nano/pipeline"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -41,26 +38,18 @@ func main() {
 func RunWebsocket() {
 	components := &component.Components{}
 	components.Register(
-		test.NewRoomManager(),
-		component.WithName("room"), // rewrite component and handler name
+		global.GVA_SOCKET,
+		component.WithName("socket"), // rewrite component and handler name
 		component.WithNameFunc(strings.ToLower),
 	)
 
-	pip := pipeline.New()
-	var stats = &test.Stats{}
-	pip.Outbound().PushBack(stats.Outbound)
-	pip.Inbound().PushBack(stats.Inbound)
-
-	log.SetFlags(log.LstdFlags | log.Llongfile)
-	http.Handle("/web/", http.StripPrefix("/web/", http.FileServer(http.Dir("web"))))
-
 	nano.Listen(":3250",
 		nano.WithIsWebsocket(true),
-		nano.WithPipeline(pip),
+		nano.WithPipeline(global.GVA_SOCKET.Pip),
 		nano.WithCheckOriginFunc(func(_ *http.Request) bool { return true }),
-		nano.WithWSPath("/nano"),
+		nano.WithWSPath("/socket"),
 		nano.WithDebugMode(),
-		nano.WithSerializer(common.NewSerializer()), // override default serializer
+		nano.WithSerializer(websocket.NewSerializer()), // override default serializer
 		nano.WithComponents(components),
 	)
 }

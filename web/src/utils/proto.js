@@ -1,25 +1,24 @@
 import * as room from '@/protobuf/proto/room'
 import * as common from '@/protobuf/proto/common'
 import * as googleAny from '@/google/protobuf/any'
+import * as resources from '@/protobuf/proto/resources'
 
-export var Protos = {
+export var protos = {
   room,
   common,
-  googleAny
+  googleAny,
+  resources
 }
 
-// function mergeNamespacesIntoProtos(namespace, namespaceName) {
-//   for (const key in namespace) {
-//     const fullName = `${namespaceName}.${key}`
-//     Protos[fullName] = {
-//       ...namespace[key],
-//       getFullName: function() { return fullName } // 修改了方法名
-//     }
-//   }
-// }
+for (const namespace in protos) {
+  for (const key in protos[namespace]) {
+    if (protos[namespace][key].encode) {
+      protos[namespace][key].getFullName = () => {
+        return `${protos[namespace].protobufPackage}.${key}`
+      }
+    }
+  }
+}
 
-// mergeNamespacesIntoProtos(room, room.protobufPackage)
-// mergeNamespacesIntoProtos(common, common.protobufPackage)
-// mergeNamespacesIntoProtos(googleAny, googleAny.protobufPackage)
+// console.log('Protos', protos)
 
-console.log('Protos', Protos)

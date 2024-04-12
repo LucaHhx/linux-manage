@@ -167,8 +167,10 @@ import {
   findAText,
   getATextList
 } from '@/api/aText'
-import { websocket } from '@/protobuf/websocket/register'
 import { userMessage } from '@/protobuf/proto/room'
+import { starx } from '@/utils/starx-wsclient'
+import { protos } from '@/utils/proto'
+import { message } from '@/protobuf/proto/common'
 // 选项
 const typeOpts = [
   { key: 1, value: 'Type1' },
@@ -176,9 +178,8 @@ const typeOpts = [
   { key: 3, value: 'Type3' },
   { key: 4, value: 'Type4' }
 ]
-const aa = userMessage.encode({ name: 'huang', content: 'hello' })
 
-websocket.notify('room.message', aa.finish())
+starx.notify('socket.message', protos.common.message, { message: " userMessage('Hello')" })
 // 缓存
 const gridCacheKey = 'aTextGrid'
 const grid = ref(null)

@@ -31,3 +31,12 @@ message basicReq {
     reqHead head = 1;
     google.protobuf.Any data = 2;
 }
+
+message basicRep {
+    repHead head = 1;
+    google.protobuf.Any data = 2;
+}
+
+message message {
+   string message = 1;
+}

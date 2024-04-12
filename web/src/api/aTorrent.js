@@ -1,3 +1,4 @@
+import { protos } from '@/utils/proto'
 import service from '@/utils/request'
 
 // @Tags ATorrent
@@ -95,3 +96,42 @@ export const getATorrentList = (data) => {
     data
   })
 }
+
+export const startDownload = (params) => {
+  return service({
+    url: '/aTorrent/download',
+    method: 'get',
+    params
+  })
+}
+
+export const stopDownload = (params) => {
+  return service({
+    url: '/aTorrent/stopDownload',
+    method: 'get',
+    params
+  })
+}
+
+import { ref } from 'vue'
+export const downloadInfo = ref({})
+
+export const getDownloadInfo = (params) => {
+  var info = protos.resources.downloadInfo.fromJSON(params)
+  if (info.isFinished) {
+    downloadInfo.value[info.id] = null
+  }
+  // const statusFormat = (ratio) => `Loading: ${ratio * 100}%`
+  info.statusFormat = (ratio) => `${ratio * 100}%                      ` + info.finishBytes + '⇆' + info.totalBytes + '↧' + info.speed
+  downloadInfo.value[info.id] = info
+  // console.log('getDownloadInfo', info)
+}
+
+getDownloadInfo({
+  id: 1,
+  name: 'test',
+  isFinished: false,
+  finishBytes: '100KB',
+  totalBytes: '1000KB',
+  speed: '100KB/s'
+})

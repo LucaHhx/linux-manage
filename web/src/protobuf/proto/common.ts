@@ -112,6 +112,15 @@ export interface basicReq {
   data: Any | undefined;
 }
 
+export interface basicRep {
+  head: repHead | undefined;
+  data: Any | undefined;
+}
+
+export interface message {
+  message: string;
+}
+
 function createBasereqHead(): reqHead {
   return { token: "", userId: 0 };
 }
@@ -330,6 +339,137 @@ export const basicReq = {
     const message = createBasebasicReq();
     message.head = (object.head !== undefined && object.head !== null) ? reqHead.fromPartial(object.head) : undefined;
     message.data = (object.data !== undefined && object.data !== null) ? Any.fromPartial(object.data) : undefined;
+    return message;
+  },
+};
+
+function createBasebasicRep(): basicRep {
+  return { head: undefined, data: undefined };
+}
+
+export const basicRep = {
+  encode(message: basicRep, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.head !== undefined) {
+      repHead.encode(message.head, writer.uint32(10).fork()).ldelim();
+    }
+    if (message.data !== undefined) {
+      Any.encode(message.data, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): basicRep {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasebasicRep();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 10) {
+            break;
+          }
+
+          message.head = repHead.decode(reader, reader.uint32());
+          continue;
+        case 2:
+          if (tag !== 18) {
+            break;
+          }
+
+          message.data = Any.decode(reader, reader.uint32());
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): basicRep {
+    return {
+      head: isSet(object.head) ? repHead.fromJSON(object.head) : undefined,
+      data: isSet(object.data) ? Any.fromJSON(object.data) : undefined,
+    };
+  },
+
+  toJSON(message: basicRep): unknown {
+    const obj: any = {};
+    if (message.head !== undefined) {
+      obj.head = repHead.toJSON(message.head);
+    }
+    if (message.data !== undefined) {
+      obj.data = Any.toJSON(message.data);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<basicRep>, I>>(base?: I): basicRep {
+    return basicRep.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<basicRep>, I>>(object: I): basicRep {
+    const message = createBasebasicRep();
+    message.head = (object.head !== undefined && object.head !== null) ? repHead.fromPartial(object.head) : undefined;
+    message.data = (object.data !== undefined && object.data !== null) ? Any.fromPartial(object.data) : undefined;
+    return message;
+  },
+};
+
+function createBasemessage(): message {
+  return { message: "" };
+}
+
+export const message = {
+  encode(message: message, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.message !== "") {
+      writer.uint32(10).string(message.message);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): message {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasemessage();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 10) {
+            break;
+          }
+
+          message.message = reader.string();
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): message {
+    return { message: isSet(object.message) ? globalThis.String(object.message) : "" };
+  },
+
+  toJSON(message: message): unknown {
+    const obj: any = {};
+    if (message.message !== "") {
+      obj.message = message.message;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<message>, I>>(base?: I): message {
+    return message.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<message>, I>>(object: I): message {
+    const message = createBasemessage();
+    message.message = object.message ?? "";
     return message;
   },
 };

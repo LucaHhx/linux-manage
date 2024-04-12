@@ -65,10 +65,11 @@
         <DxColumn data-field="CreatedAt" data-type="datetime" width="150" caption="创建时间" />
         <DxColumn data-field="UpdatedAt" data-type="datetime" width="150" caption="最近修改" />
         <DxColumn type="buttons">
-          <DxButton name="save" css-class="my-class" />
-          <DxButton name="edit" />
-          <DxButton name="delete" />
-          <DxButton text="AA" @click="dow" />
+          <GDxButton name="save" css-class="my-class" />
+          <GDxButton name="edit" />
+          <GDxButton name="delete" />
+          <GDxButton icon="download" @click="download" />
+          <GDxButton icon="close" @click="stopdownload" />
         </DxColumn>
         <DxEditing
           :allow-updating="true"
@@ -124,7 +125,8 @@
               id="progress-bar-status"
               :min="0"
               :max="100"
-              :value="progressMap[data.data.ID]"
+              :value="downloadInfo[data.data.ID]?.progress"
+              :status-format="downloadInfo[data.data.ID]?.statusFormat"
               width="90%"
             />
             <!-- <button @click=" console.log(data);">{{ data.value }}</button> -->
@@ -162,24 +164,28 @@ import {
   DxSummary,
   DxGroupItem,
   DxLoadPanel,
-  DxButton
+  DxButton as GDxButton
 } from 'devextreme-vue/data-grid'
 import {
   DxItem as FDxItem,
 } from 'devextreme-vue/form'
-// import DxButton from 'devextreme-vue/button'
+import DxButton from 'devextreme-vue/button'
 import { DxProgressBar } from 'devextreme-vue/progress-bar'
 import DxDropDownButton from 'devextreme-vue/drop-down-button'
 import { confirm } from 'devextreme/ui/dialog'
 import CustomStore from 'devextreme/data/custom_store'
 import { tagStyle, isNullOrUndefined, getGridCacheOperate, pageSizes } from '@/utils/dataGrid'
+
 import {
   createATorrent,
   deleteATorrent,
   deleteATorrentByIds,
   updateATorrent,
   findATorrent,
-  getATorrentList
+  getATorrentList,
+  startDownload,
+  downloadInfo,
+  stopDownload
 } from '@/api/aTorrent'
 
 // 选项
@@ -189,21 +195,6 @@ const stateOpts = [
   { key: 3, value: 'Type3' },
   { key: 4, value: 'Type4' }
 ]
-const progressMap = ref({
-  1: 30
-})
-const timer = ref(null)
-timer.value = setInterval(() => {
-  // grid?.value?.instance?.refresh()
-  progressMap.value[1]++
-  console.log()
-}, 1000 * 3)
-
-onUnmounted(() => {
-  clearInterval(timer.value)
-  timer.value = null
-})
-
 // 缓存
 const gridCacheKey = 'ATorrentGrid'
 const grid = ref(null)
@@ -298,8 +289,18 @@ const deleteRecords = async() => {
   })
 }
 
-const dow = (aa) => {
-  console.log('dow', aa)
+const download = (aa) => {
+  aa.row.data.ID
+  startDownload({ ID: aa.row.data.ID }).then((r) => {
+    console.log(r)
+  })
+}
+
+const stopdownload = (aa) => {
+  aa.row.data.ID
+  stopDownload({ ID: aa.row.data.ID }).then((r) => {
+    console.log(r)
+  })
 }
 const progressBarstatus = (r, v) => {
   console.log(r, v)

@@ -15,13 +15,15 @@ func (s *ATorrentRouter) InitATorrentRouter(Router *gin.RouterGroup) {
 	aTorrentRouterWithoutRecord := Router.Group("aTorrent")
 	var aTorrentApi = v1.ApiGroupApp.ResourcesApiGroup.ATorrentApi
 	{
-		aTorrentRouter.POST("createATorrent", aTorrentApi.CreateATorrent)   // 新建aTorrent表
-		aTorrentRouter.DELETE("deleteATorrent", aTorrentApi.DeleteATorrent) // 删除aTorrent表
+		aTorrentRouter.POST("createATorrent", aTorrentApi.CreateATorrent)             // 新建aTorrent表
+		aTorrentRouter.DELETE("deleteATorrent", aTorrentApi.DeleteATorrent)           // 删除aTorrent表
 		aTorrentRouter.DELETE("deleteATorrentByIds", aTorrentApi.DeleteATorrentByIds) // 批量删除aTorrent表
-		aTorrentRouter.PUT("updateATorrent", aTorrentApi.UpdateATorrent)    // 更新aTorrent表
+		aTorrentRouter.PUT("updateATorrent", aTorrentApi.UpdateATorrent)              // 更新aTorrent表
 	}
 	{
 		aTorrentRouterWithoutRecord.GET("findATorrent", aTorrentApi.FindATorrent)        // 根据ID获取aTorrent表
-		aTorrentRouterWithoutRecord.POST("getATorrentList", aTorrentApi.GetATorrentList)  // 获取aTorrent表列表
+		aTorrentRouterWithoutRecord.POST("getATorrentList", aTorrentApi.GetATorrentList) // 获取aTorrent表列表
+		aTorrentRouterWithoutRecord.GET("download", aTorrentApi.Download)                // 获取aTorrent表列表
+		aTorrentRouterWithoutRecord.GET("stopDownload", aTorrentApi.StopDownload)        // 获取aTorrent表列表
 	}
 }

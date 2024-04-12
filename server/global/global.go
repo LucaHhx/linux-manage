@@ -1,6 +1,8 @@
 package global
 
 import (
+	"github.com/flipped-aurora/gin-vue-admin/server/initialize/torrent"
+	"github.com/flipped-aurora/gin-vue-admin/server/plugin/websocket"
 	"github.com/qiniu/qmgo"
 	"sync"
 
@@ -25,13 +27,14 @@ var (
 	GVA_MONGO  *qmgo.QmgoClient
 	GVA_CONFIG config.Server
 	GVA_VP     *viper.Viper
+	GVA_SOCKET *websocket.SocketClient
 	// GVA_LOG    *oplogging.Logger
 	GVA_LOG                 *zap.Logger
 	GVA_Timer               timer.Timer = timer.NewTimerTask()
 	GVA_Concurrency_Control             = &singleflight.Group{}
-
-	BlackCache local_cache.Cache
-	lock       sync.RWMutex
+	GVA_TORRENT             *torrent.MagnetClient
+	BlackCache              local_cache.Cache
+	lock                    sync.RWMutex
 )
 
 // GetGlobalDBByDBName 通过名称获取db list中的db

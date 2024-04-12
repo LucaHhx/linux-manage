@@ -1,6 +1,7 @@
 import Protocol from './protocol'
 import { ElMessage } from 'element-plus'
-
+import { useUserStore } from '@/pinia/modules/user'
+import { protos } from '@/utils/proto'
 class Emitter {
   constructor(obj) {
     if (obj) return mixin(obj)
@@ -53,14 +54,13 @@ class Emitter {
     this._callbacks = this._callbacks || {}
     var args = [].slice.call(arguments, 1)
     var callbacks = this._callbacks[event]
-
-    if (callbacks) {
+    const message = converProto(args[0])
+    if (callbacks && message) {
       callbacks = callbacks.slice(0)
       for (var i = 0, len = callbacks.length; i < len; ++i) {
-        callbacks[i].apply(this, args)
+        callbacks[i].apply(this, [message])
       }
     }
-
     return this
   }
 
@@ -170,8 +170,6 @@ class Starx extends Emitter {
     //   msg = Protocol.strencode(JSON.stringify(msg))
     // }
 
-    console.log('encode', msg, Protocol.strencode(JSON.stringify(msg)))
-    // msg = Protocol.strencode(JSON.stringify(msg))
     var compressRoute = 0
     if (dict && dict[route]) {
       route = dict[route]
@@ -185,7 +183,7 @@ class Starx extends Emitter {
     if (socket) {
       if (socket.disconnect) socket.disconnect()
       if (socket.close) socket.close()
-      console.log('disconnect')
+      // console.log('disconnect')
       socket = null
     }
 
@@ -199,10 +197,11 @@ class Starx extends Emitter {
     }
   }
 
-  request(route, msg, cb) {
-    if (arguments.length === 2 && typeof msg === 'function') {
-      cb = msg
+  request(route, type, msg, cb) {
+    if (arguments.length === 2 && typeof type === 'function') {
+      cb = type
       msg = {}
+      type = null
     } else {
       msg = msg || {}
     }
@@ -212,15 +211,15 @@ class Starx extends Emitter {
     }
 
     reqId++
-    sendMessage(reqId, route, msg)
+    sendMessage(reqId, route, type, msg)
 
     callbacks[reqId] = cb
     routeMap[reqId] = route
   }
 
-  notify(route, msg) {
+  notify(route, type, msg) {
     msg = msg || {}
-    sendMessage(0, route, msg)
+    sendMessage(0, route, type, msg)
   }
   // ... (Starx-specific methods like init, request, notify, etc.) ...
 }
@@ -276,8 +275,11 @@ var defaultDecode = starx.decode
 var defaultEncode = starx.encode
 
 var connect = function(params, url, cb, closeCb) {
-  console.log('connect to ' + url)
-
+  // console.log('connect to ' + url)
+  console.log(`%c connect to %c ` + url + ` %c`,
+    'background:#0081ff; padding: 1px; border-radius: 3px 0 0 3px; color: #fff',
+    'background:#354855; padding: 1px 5px; border-radius: 0 3px 3px 0; color: #fff; font-weight: bold;',
+    'background:transparent')
   var params = params || {}
   var maxReconnectAttempts = params.maxReconnectAttempts || DEFAULT_MAX_RECONNECT_ATTEMPTS
   reconnectUrl = url
@@ -336,14 +338,25 @@ var reset = function() {
   clearTimeout(reconncetTimer)
 }
 
-var sendMessage = function(reqId, route, msg) {
+var sendMessage = function(reqId, route, type, msg) {
   if (useCrypto) {
     msg = JSON.stringify(msg)
     var sig = rsa.signString(msg, 'sha256')
     msg = JSON.parse(msg)
     msg['__crypto__'] = sig
   }
-
+  var any = protos.googleAny.Any.fromPartial({})
+  if (type) {
+    any = protos.googleAny.Any.fromPartial({ typeUrl: type.getFullName(), value: type.encode(type.fromPartial(msg)).finish() })
+  }
+  const userStore = useUserStore()
+  const data = protos.common.basicReq.fromPartial({ head: {
+    token: userStore.token,
+    userId: userStore.userInfo.ID,
+  },
+  data: any
+  })
+  msg = protos.common.basicReq.encode(data).finish()
   if (encode) {
     msg = encode(reqId, route, msg)
   }
@@ -445,8 +458,10 @@ var processPackage = function(msgs) {
 }
 
 var processMessage = function(starx, msg) {
+  // console.log('processMessage', msg)
   if (!msg.id) {
     // server push message
+    // console.log('server push message', msg.route, msg.body)
     starx.emit(msg.route, msg.body)
     return
   }
@@ -458,11 +473,15 @@ var processMessage = function(starx, msg) {
   if (typeof cb !== 'function') {
     return
   }
-
-  cb(msg.body)
+  // console.log('processMessage', msg)
+  const message = converProto(msg.body)
+  if (message) {
+    cb(message)
+  }
 }
 
 var processMessageBatch = function(starx, msgs) {
+  // console.log('processMessageBatch', msgs)
   for (var i = 0, l = msgs.length; i < l; i++) {
     processMessage(starx, msgs[i])
   }
@@ -521,4 +540,27 @@ var initData = function(data) {
   }
 
   window.starx = starx
+}
+
+var converProto = (arg) => {
+  if (arg.type) {
+    ElMessage.error(arg.type)
+    return null
+  }
+  // console.log(arg)
+  var proto = protos.common.basicRep.decode(arg)
+  if (proto.head) {
+    const head = proto.head
+    if (head.code !== 0) {
+      ElMessage.error(head.msg)
+      return null
+    }
+    if (proto.data) {
+      const data = proto.data
+      const path = data.typeUrl.split('/')[1].split('.')
+      const type = protos[path[0]][path[1]]
+      return type.decode(data.value)
+    }
+  }
+  return null
 }
